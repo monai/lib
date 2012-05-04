@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="lib" default="lib" basedir=".">
+    <property file="build.properties" />
+    <property name="dist" value="./dist" />
+    <property name="out" value="lib.js" />
+    <property name="out_min" value="lib.min.js" />
+
+    <target name="lib">
+        <mkdir dir="${dist}" />
+        <concat destfile="${dist}/${out}">
+            <fileset file="src/core/lib.js" />
+            <fileset file="src/util/util.js" />
+            <fileset file="src/util/Benchmark.js" />
+            <fileset file="src/javascript/object.js" />
+            <fileset file="src/javascript/array.js" />
+            <fileset file="src/javascript/string.js" />
+            <fileset file="src/javascript/date.js" />
+            <fileset file="src/javascript/JSON.js" />
+            <fileset file="src/dom/dom.js" />
+            <fileset file="src/dom/NodeList.js" />
+            <fileset file="src/event/event.js" />
+            <fileset file="src/browser/dimensions.js" />
+            <fileset file="src/tween/tween.js" />
+            <fileset file="src/widget/widget.js" />
+            <fileset file="src/browser/ie.js" />
+        </concat>
+        <replaceregexp match="@VERSION" replace="${version}" flags="g" byline="true" file="${dist}/${out}" />
+    </target>
+    
+    <target name="min" depends="lib">
+		<apply executable="java" parallel="false" verbose="true" dest="${dist}">
+			<fileset dir="${dist}">
+				<include name="${out}" />
+			</fileset>
+			<arg line="-jar" />
+			<arg path="build/google-compiler-20120130.jar" />
+			<arg value="--warning_level" />
+			<arg value="QUIET" />
+			<arg value="--js_output_file" />
+			<targetfile />
+			<arg value="--js" />
+			<mapper type="glob" from="lib.js" to="lib.min.js" />
+		</apply>
+	</target>
+	
+	<target name="all" depends="lib,min" />
+	
+	<target name="clean">
+        <delete dir="${dist}" />
+    </target>
+</project>
