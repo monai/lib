@@ -1,13 +1,13 @@
-(function(view, undefined) {
+(function(window, undefined) {
     var ua = navigator.userAgent.toLowerCase(),
         
         log = function log() {
-            if (view.console && view.console.log && view.console.log.apply) {
-                view.console.log.apply(view.console, arguments);
+            if (window.console && window.console.log && window.console.log.apply) {
+                window.console.log.apply(window.console, arguments);
             } else {
                 log.output.push(lib.array.toArray(arguments).join(", "));
-                view.clearTimeout(log.time);
-                log.time = view.setTimeout(function() {
+                window.clearTimeout(log.time);
+                log.time = window.setTimeout(function() {
                     var t = log.output.join("\r\n");
                     log.output = [];
                     alert(t);
@@ -28,11 +28,9 @@
             log: log,
             inspect: inspect,
             
-            view: view,
+            window: window, // for legacy compatibility
             
-            window: view, // for legacy compatibility
-            
-            document: view && view.document || document,
+            document: window && window.document || document,
             
             isReady: false,
             
@@ -90,8 +88,8 @@
     lib.log.output = [];
     lib.guid.id = 1;
     
-    if (!view.lib) view.lib = lib;
-    if (!view.log) view.log = log;
+    if (!window.lib) window.lib = lib;
+    if (!window.log) window.log = log;
     
     (function() {
         if (lib.isReady) return;

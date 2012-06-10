@@ -21,10 +21,10 @@
             if (typeof callback != "function") throw new TypeError(callback + " is not a function");
             
             if ("forEach" in array) {
-                array.forEach(callback, thisObject || lib.view);
+                array.forEach(callback, thisObject || lib.window);
             } else {
                 for (var i = 0, len = array.length; i < len; i++) {
-                    callback.call(thisObject || lib.view, array[i], i, array);
+                    callback.call(thisObject || lib.window, array[i], i, array);
                 }
             }
         },
@@ -33,10 +33,10 @@
             if (typeof callback != "function") throw new TypeError(callback + " is not a function");
             
             if ("every" in array) {
-                return array.every(callback, thisObject || lib.view);
+                return array.every(callback, thisObject || lib.window);
             } else {
                 for (var i = 0, len = array.length; i < len; i++) {
-                    if (i in array && !callback.call(thisObject || lib.view, array[i], i, array)) return false;
+                    if (i in array && !callback.call(thisObject || lib.window, array[i], i, array)) return false;
                 }
                 return true;
             }
@@ -46,10 +46,10 @@
             if (typeof callback != "function") throw new TypeError(callback + " is not a function");
             
             if ("some" in array) {
-                return array.some(callback, thisObject || lib.view);
+                return array.some(callback, thisObject || lib.window);
             } else {
                 for (var i = 0, len = array.length; i < len; i++) {
-                    if (i in array && callback.call(thisObject || lib.view, array[i], i, array)) return true;
+                    if (i in array && callback.call(thisObject || lib.window, array[i], i, array)) return true;
                 }
                 return false;
             }
@@ -59,12 +59,12 @@
             if (typeof callback != "function") throw new TypeError(callback + " is not a function");
             
             if ("filter" in array) {
-                return array.filter(callback, thisObject || lib.view);
+                return array.filter(callback, thisObject || lib.window);
             } else {
                 var out = [];
                 for (var i = 0, len = array.length; i < len; i++) {
                     if (i in array) {
-                        if (callback.call(thisObject || lib.view, array[i], i, array)) out.push(array[i]);
+                        if (callback.call(thisObject || lib.window, array[i], i, array)) out.push(array[i]);
                     }
                 }
                 return out;
@@ -75,12 +75,12 @@
             if (typeof callback != "function") throw new TypeError(callback + " is not a function");
             
             if ("map" in array) {
-                return array.map(callback, thisObject || lib.view);
+                return array.map(callback, thisObject || lib.window);
             } else {
                 var len = array.length,
                     out = new Array(len);
                 for (var i = 0; i < len; i++) {
-                    if (i in array) out[i] = callback.call(thisObject || lib.view, array[i], i, array);
+                    if (i in array) out[i] = callback.call(thisObject || lib.window, array[i], i, array);
                 }
                 return out;
             }
@@ -103,7 +103,7 @@
                     out = (isUndefined) ? initialValue : array[i++];
                 
                 for (; i < len; i++) {
-                    if (i in array) out = callback.call(lib.view, out, array[i], i, array);
+                    if (i in array) out = callback.call(lib.window, out, array[i], i, array);
                 }
                 return out;
             }
@@ -126,7 +126,7 @@
                     out = (isUndefined) ? initialValue : array[i--];
                 
                 for (; i >= 0; i--) {
-                    if (i in array) out = callback.call(lib.view, out, array[i], i, array);
+                    if (i in array) out = callback.call(lib.window, out, array[i], i, array);
                 }
                 return out;
             }

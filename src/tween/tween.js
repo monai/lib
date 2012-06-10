@@ -48,11 +48,11 @@
         },
         
         getRequestAnimationFrame: function getRequestAnimationFrame() {
-            return lib.view.requestAnimationFrame
-                || lib.view.mozRequestAnimationFrame
-                || lib.view.webkitRequestAnimationFrame
-                || lib.view.msRequestAnimationFrame
-                || lib.view.oRequestAnimationFrame;
+            return lib.window.requestAnimationFrame
+                || lib.window.mozRequestAnimationFrame
+                || lib.window.webkitRequestAnimationFrame
+                || lib.window.msRequestAnimationFrame
+                || lib.window.oRequestAnimationFrame;
         },
         
         run: function run(from, to, duration, easing, stepCallback, endCallback) {
@@ -89,7 +89,7 @@
                 if (isFunctionStepCallback) stepCallback.call(this, delta);
                 if (end) {
                     if (isFunctionEndCallback) endCallback.call(this, delta);
-                    if (!requestAnimationFrame) lib.view.clearInterval(intervalHandle);
+                    if (!requestAnimationFrame) lib.window.clearInterval(intervalHandle);
                     return;
                 } else {
                     if (requestAnimationFrame) requestAnimationFrame(intervalFunction);
@@ -99,7 +99,7 @@
             if (requestAnimationFrame) {
                 requestAnimationFrame(intervalFunction);
             } else {
-                intervalHandle = lib.view.setInterval(intervalFunction, 13);
+                intervalHandle = lib.window.setInterval(intervalFunction, 13);
             }
         }
     };
