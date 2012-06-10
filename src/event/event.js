@@ -84,11 +84,11 @@
                     if (this.w3c) {
                         target.removeEventListener(type, callback, false);
                     } else if (this.ie && target.__events[type].supported) {
-                        var _callback = target.__events[type].IECallbacks[callback._guid];
+                        var _callback = target.__events[type].IECallbacks[callback.__guid];
                         target.detachEvent("on" + type, _callback);
-                        delete target.__events[type].IECallbacks[callback._guid];
+                        delete target.__events[type].IECallbacks[callback.__guid];
                     }
-                    delete target.__events[type].callbacks[callback._guid];
+                    delete target.__events[type].callbacks[callback.__guid];
                 } else {
                     for (i in target.__events[type].callbacks) {
                         this.remove(target, type, target.__events[type].callbacks[i]);

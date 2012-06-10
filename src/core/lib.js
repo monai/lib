@@ -26,6 +26,7 @@
         
         lib = {
             log: log,
+            
             inspect: inspect,
             
             window: window,
@@ -34,12 +35,21 @@
             
             isReady: false,
             
-            ready: function(callback) {
-                if (typeof callback != "function") return;
-                if (!lib.isReady) {
-                    lib.event.add(document, "libReady", lib.bind(callback, window));
-                } else {
-                    callback();
+            isDOMReady: false,
+            
+            ready: function ready(callback, dom) {
+                if (callback === true) {
+                    lib.isReady = true;
+                    lib.event.dispatch(lib.document, "libReady");
+                    lib.event.remove(lib.document, "libReady");
+                } else if (typeof callback == "function") {
+                    if (!lib.isReady && !dom) {
+                        lib.event.add(lib.document, "libReady", lib.bind(callback, lib.window));
+                    } else if (!lib.isDOMReady && dom) {
+                        lib.event.add(lib.document, "DOMReady", lib.bind(callback, lib.window));
+                    } else {
+                        callback();
+                    }
                 }
             },
             
@@ -58,7 +68,7 @@
                     webkit  : parseFloat(webkit),
                     khtml   : parseFloat(khtml),
                     version : ie || gecko || webkit || opera || khtml,
-                    standardsMode : this.d.compatMode != "BackCompat" && (!ie || ie >= 6)
+                    standardsMode : lib.document.compatMode != "BackCompat" && (!ie || ie >= 6)
                 }
             },
             
@@ -92,12 +102,13 @@
     if (!window.log) window.log = log;
     
     (function() {
-        if (lib.isReady) return;
+        if (lib.isDOMReady) return;
         
         function onReady() {
-            if (!lib.isReady) {
-                lib.isReady = true;
-                lib.event.dispatch(document, "libReady", {safe: true});
+            if (!lib.isDOMReady) {
+                lib.isDOMReady = true;
+                lib.event.dispatch(document, "DOMReady", { safe: true });
+                lib.event.remove(lib.document, "libReady");
             }
         };
         

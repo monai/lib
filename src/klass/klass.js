@@ -36,7 +36,7 @@
                 
                 properties: lib.object.keys(publicProperties),
                 
-                _guid: lib.guid(),
+                __guid: lib.guid(),
                 
                 getProperty: function getProperty(name) {
                     return (lib.array.inArray(this.properties, name)) ? mirrorKlass[name] : undefined;
