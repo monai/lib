@@ -19,9 +19,9 @@
                     
                     var _callback = lib.bind(function() {
                         if (typeof callback.attributeEvent == "undefined") {
-                            var event = fixIEEvent(window.event, target);
+                            var event = fixIEEvent(lib.window.event, target);
                         } else {
-                            var event = fixIEEvent(window.event, null);
+                            var event = fixIEEvent(lib.window.event, null);
                         }
                         
                         return callback.apply(target, [event]);
@@ -35,7 +35,7 @@
                         return this.callback.apply(this.event.currentTarget, [this.event]);
                     };
                     
-                    var _target = (target == document) ? document.documentElement : target;
+                    var _target = (target == lib.document) ? lib.document.documentElement : target;
                     if (typeof target.libEvent == "undefined") {
                         target.libEvent = 0;
                         if (target != _target) _target.libEvent = 0;
@@ -141,7 +141,7 @@
             lib.extend(eventProperties, properties || {});
 
             var event = document.createEvent("MouseEvents");
-            event.initMouseEvent(type, eventProperties.bubbles, eventProperties.cancelable, window,
+            event.initMouseEvent(type, eventProperties.bubbles, eventProperties.cancelable, lib.window,
                 eventProperties.detail, eventProperties.screenX, eventProperties.screenY, eventProperties.clientX,
                 eventProperties.clientY, eventProperties.ctrlKey, eventProperties.altKey, eventProperties.shiftKey,
                 eventProperties.metaKey, eventProperties.button, eventProperties.relatedTarget);
@@ -169,7 +169,7 @@
                 event.initKeyboardEvent = event.initKeyEvent;
             }
             
-            event.initKeyboardEvent(type, eventProperties.bubbles, eventProperties.cancelable, window,
+            event.initKeyboardEvent(type, eventProperties.bubbles, eventProperties.cancelable, lib.window,
                 eventProperties.ctrlKey, eventProperties.altKey, eventProperties.shiftKey, eventProperties.metaKey,
                 eventProperties.keyCode, eventProperties.charCode);
             lib.extend(event, customProperties);
@@ -204,7 +204,7 @@
             var event = document.createEvent("UIEvents");
             event.initUIEvent(type, eventProperties.bubbles,
                               eventProperties.cancelable,
-                              window,
+                              lib.window,
                               eventProperties.detail);
             lib.extend(event, customProperties);
             return target.dispatchEvent(event);
@@ -412,7 +412,7 @@
         
         var guid = lib.guid(),
             prevValue = target.__events["DOMAttrModified"].oldProperties[guid] = find(),
-            interval = window.setInterval(function() {
+            interval = lib.window.setInterval(function() {
             var newValue = find();
             if (prevValue !== newValue) {
                 event.dispatch(target, "DOMAttrModified", {
@@ -425,7 +425,7 @@
                     prevValue: prevValue,
                     compat: {
                         stop: function() {
-                            window.clearInterval(interval);
+                            lib.window.clearInterval(interval);
                             delete target.__events["DOMAttrModified"].oldProperties[guid];
                         }
                     }

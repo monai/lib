@@ -5,12 +5,12 @@
         
         get: function get(element, boxType) {
             return {
-                innerWidth: window.innerWidth || document.documentElement.offsetWidth,
-                innerHeight: window.innerHeight || document.documentElement.offsetHeight,
+                innerWidth: lib.window.innerWidth || lib.document.documentElement.offsetWidth,
+                innerHeight: lib.window.innerHeight || lib.document.documentElement.offsetHeight,
                 scrollWidth: null,
                 scrollHeight: null,
-                scrollX: window.scrollX || document.documentElement.scrollLeft,
-                scrollY: window.scrollY || document.documentElement.scrollTop
+                scrollX: lib.window.scrollX || lib.document.documentElement.scrollLeft,
+                scrollY: lib.window.scrollY || lib.document.documentElement.scrollTop
             };
         },
         

@@ -28,9 +28,9 @@
             log: log,
             inspect: inspect,
             
-            window: window, // for legacy compatibility
+            window: window,
             
-            document: window && window.document || document,
+            document: window && window.document,
             
             isReady: false,
             
