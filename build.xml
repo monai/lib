@@ -12,6 +12,7 @@
             <fileset file="src/core/lib.js" />
             <fileset file="src/util/util.js" />
             <fileset file="src/util/Benchmark.js" />
+            <fileset file="src/util/Bindable.js" />
             <fileset file="src/javascript/object.js" />
             <fileset file="src/javascript/array.js" />
             <fileset file="src/javascript/string.js" />
@@ -23,6 +24,7 @@
             <fileset file="src/browser/dimensions.js" />
             <fileset file="src/tween/tween.js" />
             <fileset file="src/widget/widget.js" />
+            <fileset file="src/widget/Model.js" />
             <fileset file="src/browser/ie.js" />
         </concat>
         <replaceregexp match="@VERSION" replace="${version}" flags="g" byline="true" file="${dist}/${out}.out" />
