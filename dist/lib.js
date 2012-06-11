@@ -7,16 +7,16 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-(function(view, undefined) {
+(function(window, undefined) {
     var ua = navigator.userAgent.toLowerCase(),
         
         log = function log() {
-            if (view.console && view.console.log && view.console.log.apply) {
-                view.console.log.apply(view.console, arguments);
+            if (window.console && window.console.log && window.console.log.apply) {
+                window.console.log.apply(window.console, arguments);
             } else {
                 log.output.push(lib.array.toArray(arguments).join(", "));
-                view.clearTimeout(log.time);
-                log.time = view.setTimeout(function() {
+                window.clearTimeout(log.time);
+                log.time = window.setTimeout(function() {
                     var t = log.output.join("\r\n");
                     log.output = [];
                     alert(t);
@@ -35,22 +35,30 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         
         lib = {
             log: log,
+            
             inspect: inspect,
             
-            view: view,
+            window: window,
             
-            window: view, // for legacy compatibility
-            
-            document: view && view.document || document,
+            document: window && window.document,
             
             isReady: false,
             
-            ready: function(callback) {
-                if (typeof callback != "function") return;
-                if (!lib.isReady) {
-                    lib.event.add(document, "libReady", lib.bind(callback, window));
-                } else {
-                    callback();
+            isDOMReady: false,
+            
+            ready: function ready(callback, dom) {
+                if (callback === true) {
+                    lib.isReady = true;
+                    lib.event.dispatch(lib.document, "libReady");
+                    lib.event.remove(lib.document, "libReady");
+                } else if (typeof callback == "function") {
+                    if (!lib.isReady && !dom) {
+                        lib.event.add(lib.document, "libReady", lib.bind(callback, lib.window));
+                    } else if (!lib.isDOMReady && dom) {
+                        lib.event.add(lib.document, "DOMReady", lib.bind(callback, lib.window));
+                    } else {
+                        callback();
+                    }
                 }
             },
             
@@ -69,7 +77,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     webkit  : parseFloat(webkit),
                     khtml   : parseFloat(khtml),
                     version : ie || gecko || webkit || opera || khtml,
-                    standardsMode : this.d.compatMode != "BackCompat" && (!ie || ie >= 6)
+                    standardsMode : lib.document.compatMode != "BackCompat" && (!ie || ie >= 6)
                 }
             },
             
@@ -99,16 +107,17 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     lib.log.output = [];
     lib.guid.id = 1;
     
-    if (!view.lib) view.lib = lib;
-    if (!view.log) view.log = log;
+    if (!window.lib) window.lib = lib;
+    if (!window.log) window.log = log;
     
     (function() {
-        if (lib.isReady) return;
+        if (lib.isDOMReady) return;
         
         function onReady() {
-            if (!lib.isReady) {
-                lib.isReady = true;
-                lib.event.dispatch(document, "libReady", {safe: true});
+            if (!lib.isDOMReady) {
+                lib.isDOMReady = true;
+                lib.event.dispatch(document, "DOMReady", { safe: true });
+                lib.event.remove(lib.document, "libReady");
             }
         };
         
@@ -246,6 +255,54 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     
 })(lib);
 (function(lib, undefined) {
+    function Bindable(value) {
+        if (this == lib.util) return new Bindable(value);
+        
+        this.__guid = lib.guid();
+        this._callbacks = [];
+        
+        this.value = value;
+    };
+    
+    lib.extend(Bindable.prototype, {
+        get: function get() {
+            return this.value;
+        },
+        
+        set: function set(value) {
+            var oldValue = this.value;
+            this.value = value;
+            lib.array.forEach(this._callbacks, lib.bind(function(n) {
+                n(this.value, oldValue);
+            }, this));
+            return this;
+        },
+        
+        addListener: function addListener(callback) {
+            if (!lib.util.isFunction(callback)) return;
+            this._callbacks.push(callback);
+        },
+        
+        removeListener: function removeListener(callback) {
+            if (callback) {
+                if (!lib.util.isFunction(callback)) return;
+                var cb = this._callbacks;
+                for (var i = 0, l = cb.length; i < l; i++) {
+                    if (cb[i] === callback) {
+                        cb.splice(i, 1);
+                        break;
+                    }
+                }
+            } else {
+                this.callbacks = [];
+            }
+        }
+    });
+    
+    lib.util.Bindable = Bindable;
+    
+})(lib);
+(function(lib, undefined) {
     lib.object = {
         keys: function keys(object) {
             if ("keys" in Object) {
@@ -303,10 +360,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             if (typeof callback != "function") throw new TypeError(callback + " is not a function");
             
             if ("forEach" in array) {
-                array.forEach(callback, thisObject || lib.view);
+                array.forEach(callback, thisObject || lib.window);
             } else {
                 for (var i = 0, len = array.length; i < len; i++) {
-                    callback.call(thisObject || lib.view, array[i], i, array);
+                    callback.call(thisObject || lib.window, array[i], i, array);
                 }
             }
         },
@@ -315,10 +372,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             if (typeof callback != "function") throw new TypeError(callback + " is not a function");
             
             if ("every" in array) {
-                return array.every(callback, thisObject || lib.view);
+                return array.every(callback, thisObject || lib.window);
             } else {
                 for (var i = 0, len = array.length; i < len; i++) {
-                    if (i in array && !callback.call(thisObject || lib.view, array[i], i, array)) return false;
+                    if (i in array && !callback.call(thisObject || lib.window, array[i], i, array)) return false;
                 }
                 return true;
             }
@@ -328,10 +385,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             if (typeof callback != "function") throw new TypeError(callback + " is not a function");
             
             if ("some" in array) {
-                return array.some(callback, thisObject || lib.view);
+                return array.some(callback, thisObject || lib.window);
             } else {
                 for (var i = 0, len = array.length; i < len; i++) {
-                    if (i in array && callback.call(thisObject || lib.view, array[i], i, array)) return true;
+                    if (i in array && callback.call(thisObject || lib.window, array[i], i, array)) return true;
                 }
                 return false;
             }
@@ -341,12 +398,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             if (typeof callback != "function") throw new TypeError(callback + " is not a function");
             
             if ("filter" in array) {
-                return array.filter(callback, thisObject || lib.view);
+                return array.filter(callback, thisObject || lib.window);
             } else {
                 var out = [];
                 for (var i = 0, len = array.length; i < len; i++) {
                     if (i in array) {
-                        if (callback.call(thisObject || lib.view, array[i], i, array)) out.push(array[i]);
+                        if (callback.call(thisObject || lib.window, array[i], i, array)) out.push(array[i]);
                     }
                 }
                 return out;
@@ -357,12 +414,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             if (typeof callback != "function") throw new TypeError(callback + " is not a function");
             
             if ("map" in array) {
-                return array.map(callback, thisObject || lib.view);
+                return array.map(callback, thisObject || lib.window);
             } else {
                 var len = array.length,
                     out = new Array(len);
                 for (var i = 0; i < len; i++) {
-                    if (i in array) out[i] = callback.call(thisObject || lib.view, array[i], i, array);
+                    if (i in array) out[i] = callback.call(thisObject || lib.window, array[i], i, array);
                 }
                 return out;
             }
@@ -385,7 +442,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     out = (isUndefined) ? initialValue : array[i++];
                 
                 for (; i < len; i++) {
-                    if (i in array) out = callback.call(lib.view, out, array[i], i, array);
+                    if (i in array) out = callback.call(lib.window, out, array[i], i, array);
                 }
                 return out;
             }
@@ -408,7 +465,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     out = (isUndefined) ? initialValue : array[i--];
                 
                 for (; i >= 0; i--) {
-                    if (i in array) out = callback.call(lib.view, out, array[i], i, array);
+                    if (i in array) out = callback.call(lib.window, out, array[i], i, array);
                 }
                 return out;
             }
@@ -1120,9 +1177,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     
                     var _callback = lib.bind(function() {
                         if (typeof callback.attributeEvent == "undefined") {
-                            var event = fixIEEvent(window.event, target);
+                            var event = fixIEEvent(lib.window.event, target);
                         } else {
-                            var event = fixIEEvent(window.event, null);
+                            var event = fixIEEvent(lib.window.event, null);
                         }
                         
                         return callback.apply(target, [event]);
@@ -1136,7 +1193,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                         return this.callback.apply(this.event.currentTarget, [this.event]);
                     };
                     
-                    var _target = (target == document) ? document.documentElement : target;
+                    var _target = (target == lib.document) ? lib.document.documentElement : target;
                     if (typeof target.libEvent == "undefined") {
                         target.libEvent = 0;
                         if (target != _target) _target.libEvent = 0;
@@ -1185,11 +1242,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     if (this.w3c) {
                         target.removeEventListener(type, callback, false);
                     } else if (this.ie && target.__events[type].supported) {
-                        var _callback = target.__events[type].IECallbacks[callback._guid];
+                        var _callback = target.__events[type].IECallbacks[callback.__guid];
                         target.detachEvent("on" + type, _callback);
-                        delete target.__events[type].IECallbacks[callback._guid];
+                        delete target.__events[type].IECallbacks[callback.__guid];
                     }
-                    delete target.__events[type].callbacks[callback._guid];
+                    delete target.__events[type].callbacks[callback.__guid];
                 } else {
                     for (i in target.__events[type].callbacks) {
                         this.remove(target, type, target.__events[type].callbacks[i]);
@@ -1242,7 +1299,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             lib.extend(eventProperties, properties || {});
 
             var event = document.createEvent("MouseEvents");
-            event.initMouseEvent(type, eventProperties.bubbles, eventProperties.cancelable, window,
+            event.initMouseEvent(type, eventProperties.bubbles, eventProperties.cancelable, lib.window,
                 eventProperties.detail, eventProperties.screenX, eventProperties.screenY, eventProperties.clientX,
                 eventProperties.clientY, eventProperties.ctrlKey, eventProperties.altKey, eventProperties.shiftKey,
                 eventProperties.metaKey, eventProperties.button, eventProperties.relatedTarget);
@@ -1270,7 +1327,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 event.initKeyboardEvent = event.initKeyEvent;
             }
             
-            event.initKeyboardEvent(type, eventProperties.bubbles, eventProperties.cancelable, window,
+            event.initKeyboardEvent(type, eventProperties.bubbles, eventProperties.cancelable, lib.window,
                 eventProperties.ctrlKey, eventProperties.altKey, eventProperties.shiftKey, eventProperties.metaKey,
                 eventProperties.keyCode, eventProperties.charCode);
             lib.extend(event, customProperties);
@@ -1305,7 +1362,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             var event = document.createEvent("UIEvents");
             event.initUIEvent(type, eventProperties.bubbles,
                               eventProperties.cancelable,
-                              window,
+                              lib.window,
                               eventProperties.detail);
             lib.extend(event, customProperties);
             return target.dispatchEvent(event);
@@ -1513,7 +1570,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         
         var guid = lib.guid(),
             prevValue = target.__events["DOMAttrModified"].oldProperties[guid] = find(),
-            interval = window.setInterval(function() {
+            interval = lib.window.setInterval(function() {
             var newValue = find();
             if (prevValue !== newValue) {
                 event.dispatch(target, "DOMAttrModified", {
@@ -1526,7 +1583,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     prevValue: prevValue,
                     compat: {
                         stop: function() {
-                            window.clearInterval(interval);
+                            lib.window.clearInterval(interval);
                             delete target.__events["DOMAttrModified"].oldProperties[guid];
                         }
                     }
@@ -1543,12 +1600,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         
         get: function get(element, boxType) {
             return {
-                innerWidth: window.innerWidth || document.documentElement.offsetWidth,
-                innerHeight: window.innerHeight || document.documentElement.offsetHeight,
+                innerWidth: lib.window.innerWidth || lib.document.documentElement.offsetWidth,
+                innerHeight: lib.window.innerHeight || lib.document.documentElement.offsetHeight,
                 scrollWidth: null,
                 scrollHeight: null,
-                scrollX: window.scrollX || document.documentElement.scrollLeft,
-                scrollY: window.scrollY || document.documentElement.scrollTop
+                scrollX: lib.window.scrollX || lib.document.documentElement.scrollLeft,
+                scrollY: lib.window.scrollY || lib.document.documentElement.scrollTop
             };
         },
         
@@ -1615,11 +1672,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         },
         
         getRequestAnimationFrame: function getRequestAnimationFrame() {
-            return lib.view.requestAnimationFrame
-                || lib.view.mozRequestAnimationFrame
-                || lib.view.webkitRequestAnimationFrame
-                || lib.view.msRequestAnimationFrame
-                || lib.view.oRequestAnimationFrame;
+            return lib.window.requestAnimationFrame
+                || lib.window.mozRequestAnimationFrame
+                || lib.window.webkitRequestAnimationFrame
+                || lib.window.msRequestAnimationFrame
+                || lib.window.oRequestAnimationFrame;
         },
         
         run: function run(from, to, duration, easing, stepCallback, endCallback) {
@@ -1656,7 +1713,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 if (isFunctionStepCallback) stepCallback.call(this, delta);
                 if (end) {
                     if (isFunctionEndCallback) endCallback.call(this, delta);
-                    if (!requestAnimationFrame) lib.view.clearInterval(intervalHandle);
+                    if (!requestAnimationFrame) lib.window.clearInterval(intervalHandle);
                     return;
                 } else {
                     if (requestAnimationFrame) requestAnimationFrame(intervalFunction);
@@ -1666,7 +1723,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             if (requestAnimationFrame) {
                 requestAnimationFrame(intervalFunction);
             } else {
-                intervalHandle = lib.view.setInterval(intervalFunction, 13);
+                intervalHandle = lib.window.setInterval(intervalFunction, 13);
             }
         }
     };
@@ -1740,6 +1797,82 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             }
         }
     };
+    
+})(lib);
+(function(lib, undefined) {
+    function Model(object, element) {
+        if (this == lib.widget) return new Model(object, element);
+        if (!lib.util.isObject(object)) return;
+        
+        this.__guid = lib.guid();
+        
+        if (element && lib.dom.isTypeOf(element, lib.dom.ELEMENT_NODE)) {
+            this._element = element;
+            this._eventName = "__widgetModelPropertyChange" + this.__guid;
+            this._callbacks = {
+                original: [],
+                bound: []
+            };
+        }
+        
+        for (var prop in object) {
+            var _this = this,
+                bindableProp = this[prop] = lib.util.Bindable(object[prop]);
+            bindableProp.name = prop;
+            
+            if (this._element) {
+                bindableProp.addListener(lib.bind(function(val, old) {
+                    var prop = this.name,
+                        eventName = _this._eventName + prop;
+                    lib.event.dispatch(_this._element, eventName, {
+                        property: prop,
+                        value: val,
+                        oldValue: old
+                    });
+                }, bindableProp));
+            }
+        }
+    };
+    
+    lib.extend(Model.prototype, {
+        addListener: function addListener(prop, callback) {
+            if (!lib.util.isFunction(callback)) return;
+            if (this._element) {
+                var eventName = this._eventName + prop,
+                    bound = function(event) {
+                        callback(event.value, event.oldValue);
+                    };
+                
+                this._callbacks.original.push(callback);
+                this._callbacks.bound.push(bound);
+                
+                lib.event.add(this._element, eventName, bound);
+            } else {
+                this[prop].addListener(callback);
+            }
+        },
+        
+        removeListener: function removeListener(prop, callback) {
+            if (this._element) {
+                var eventName = this._eventName + prop,
+                    cb = this._callbacks,
+                    bound;
+                
+                for (var i = 0, l = cb.original.length; i < l; i++) {
+                    if (cb.original[i] === callback) {
+                        lib.event.remove(this._element, eventName, cb.bound[i]);
+                        cb.original.splice(i, 1);
+                        cb.bound.splice(i, 1);
+                        break;
+                    }
+                }
+            } else {
+                this[prop].removeListener(callback);
+            }
+        }
+    });
+    
+    lib.widget.Model = Model;
     
 })(lib);
 if (!window.opera) try { document.execCommand("BackgroundImageCache", false, true); } catch(e) {};
