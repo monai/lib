@@ -1,0 +1,46 @@
+(function(lib, undefined) {
+    function Bindable(value) {
+        if (this == lib.util) return new Bindable(value);
+        
+        this.value = value;
+        this.callbacks = [];
+    };
+    
+    lib.extend(Bindable. prototype, {
+        get: function get() {
+            return this.value;
+        },
+        
+        set: function set(value) {
+            var oldValue = this.value;
+            this.value = value;
+            lib.array.forEach(this.callbacks, lib.bind(function(n) {
+                n(this.value, oldValue);
+            }, this));
+            return this;
+        },
+        
+        addListener: function addListener(callback) {
+            if (!lib.util.isFunction(callback)) return;
+            this.callbacks.push(callback);
+        },
+        
+        removeListener: function removeListener(callback) {
+            if (callback) {
+                if (!lib.util.isFunction(callback)) return;
+                var cb = this.callbacks;
+                for (var i = 0, l = cb.length; i < l; i++) {
+                    if (cb[i] === callback) {
+                        cb.splice(i, 1);
+                        break;
+                    }
+                }
+            } else {
+                this.callbacks = [];
+            }
+        }
+    });
+    
+    lib.util.Bindable = Bindable;
+    
+})(lib);
