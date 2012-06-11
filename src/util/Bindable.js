@@ -2,13 +2,11 @@
     function Bindable(value) {
         if (this == lib.util) return new Bindable(value);
         
-        this.__guid = lib.guid();
-        this._callbacks = [];
-        
         this.value = value;
+        this.callbacks = [];
     };
     
-    lib.extend(Bindable.prototype, {
+    lib.extend(Bindable. prototype, {
         get: function get() {
             return this.value;
         },
@@ -16,7 +14,7 @@
         set: function set(value) {
             var oldValue = this.value;
             this.value = value;
-            lib.array.forEach(this._callbacks, lib.bind(function(n) {
+            lib.array.forEach(this.callbacks, lib.bind(function(n) {
                 n(this.value, oldValue);
             }, this));
             return this;
@@ -24,13 +22,13 @@
         
         addListener: function addListener(callback) {
             if (!lib.util.isFunction(callback)) return;
-            this._callbacks.push(callback);
+            this.callbacks.push(callback);
         },
         
         removeListener: function removeListener(callback) {
             if (callback) {
                 if (!lib.util.isFunction(callback)) return;
-                var cb = this._callbacks;
+                var cb = this.callbacks;
                 for (var i = 0, l = cb.length; i < l; i++) {
                     if (cb[i] === callback) {
                         cb.splice(i, 1);
