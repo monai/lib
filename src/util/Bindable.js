@@ -3,7 +3,7 @@
         if (this == lib.util) return new Bindable(value);
         
         this.__guid = lib.guid();
-        this._callbacks = [];
+        this._bound = [];
         
         this.value = value;
     };
@@ -16,29 +16,38 @@
         set: function set(value) {
             var oldValue = this.value;
             this.value = value;
-            lib.array.forEach(this._callbacks, lib.bind(function(n) {
-                n(this.value, oldValue);
+            
+            lib.array.forEach(this._bound, lib.bind(function(callback) {
+                if (lib.util.isArray(callback)) {
+                    callback[0][callback[1]] = this.value;
+                } else {
+                    callback.call(this, this.value, oldValue);
+                }
             }, this));
+            
             return this;
         },
         
-        addListener: function addListener(callback) {
-            if (!lib.util.isFunction(callback)) return;
-            this._callbacks.push(callback);
+        bind: function bind(target, property) {
+            if (target && typeof property == "string") {
+                this._bound.push([target, property]);
+            } else if (lib.util.isFunction(target)) {
+                this._bound.push(target);
+            }
         },
         
-        removeListener: function removeListener(callback) {
-            if (callback) {
-                if (!lib.util.isFunction(callback)) return;
-                var cb = this._callbacks;
-                for (var i = 0, l = cb.length; i < l; i++) {
-                    if (cb[i] === callback) {
-                        cb.splice(i, 1);
+        unbind: function unbind(target, property) {
+            if (target) {
+                var bound = this._bound,
+                    test;
+                for (var i = 0, l = bound.length; i < l; i++) {
+                    if (bound[i] === target || bound[i][0] === target && bound[i][1] === property) {
+                        bound.splice(i, 1);
                         break;
                     }
                 }
             } else {
-                this.callbacks = [];
+                this._bound = [];
             }
         }
     });
