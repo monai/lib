@@ -10,11 +10,22 @@
             return array;
         },
         
-        inArray: function inArray(array, object) {
+        indexOf: function indexOf(array, object) {
             for (var i = 0, len = array.length; i < len; i++) {
-                if (array[i] === object) return true;
+                if (array[i] === object) return i;
             }
-            return false;
+            return -1;
+        },
+        
+        lastIndexOf: function lastIndexOf(array, object) {
+            for (var len = array.length, i = len - 1; i >= 0; i--) {
+                if (array[i] === object) return i;
+            }
+            return -1;
+        },
+        
+        inArray: function inArray(array, object) {
+            return (this.indexOf(array, object) > -1) ? true : false;
         },
         
         forEach: function forEach(array, callback, thisObject) {
