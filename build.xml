@@ -21,11 +21,12 @@
             <fileset file="src/dom/dom.js" />
             <fileset file="src/dom/NodeList.js" />
             <fileset file="src/event/event.js" />
+            <fileset file="src/browser/ready.js" />
             <fileset file="src/browser/dimensions.js" />
+            <fileset file="src/browser/ie.js" />
             <fileset file="src/tween/tween.js" />
             <fileset file="src/widget/widget.js" />
             <fileset file="src/widget/Model.js" />
-            <fileset file="src/browser/ie.js" />
         </concat>
         <replaceregexp match="@VERSION" replace="${version}" flags="g" byline="true" file="${dist}/${out}.out" />
         
