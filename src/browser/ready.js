@@ -11,7 +11,7 @@
     
     if (document.readyState == "complete") { // already here!
         onReady();
-    } else if (lib.env.ie && document.attachEvent) {
+    } else if (!window.opera && document.attachEvent) {
         // like IE
         
         // not an iframe...
