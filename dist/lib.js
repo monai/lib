@@ -8,9 +8,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 (function(window, undefined) {
-    var ua = navigator.userAgent.toLowerCase(),
-        
-        log = function log() {
+        var log = function log() {
             if (window.console && window.console.log && window.console.log.apply) {
                 window.console.log.apply(window.console, arguments);
             } else {
@@ -47,7 +45,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             isDOMReady: false,
             
             ready: function ready(callback, dom) {
-                if (callback === true) {
+                if (callback === undefined) {
                     lib.isReady = true;
                     lib.event.dispatch(lib.document, "libReady");
                     lib.event.remove(lib.document, "libReady");
@@ -59,25 +57,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     } else {
                         callback();
                     }
-                }
-            },
-            
-            env: function env() {
-                var nanArray = [0, NaN],
-                    opera = (/opera[\s\/]([\w\.]+)/.exec(ua) || nanArray)[1],
-                    ie = opera ? NaN : (/msie ([\w\.]+)/.exec(ua) || nanArray)[1],
-                    gecko = (/rv:([\w\.]+).*gecko\//.exec(ua) || nanArray)[1],
-                    webkit = (/applewebkit\/([\w\.]+)/.exec(ua) || nanArray)[1],
-                    khtml = (/khtml\/([\w\.]+)/.exec(ua) || nanArray)[1];
-                
-                return {
-                    gecko   : parseFloat(gecko),
-                    ie      : parseFloat(ie),
-                    opera   : parseFloat(opera),
-                    webkit  : parseFloat(webkit),
-                    khtml   : parseFloat(khtml),
-                    version : ie || gecko || webkit || opera || khtml,
-                    standardsMode : lib.document.compatMode != "BackCompat" && (!ie || ie >= 6)
                 }
             },
             
@@ -109,91 +88,67 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     
     if (!window.lib) window.lib = lib;
     if (!window.log) window.log = log;
-    
-    (function() {
-        if (lib.isDOMReady) return;
-        
-        function onReady() {
-            if (!lib.isDOMReady) {
-                lib.isDOMReady = true;
-                lib.event.dispatch(document, "DOMReady", { safe: true });
-                lib.event.remove(lib.document, "libReady");
-            }
-        };
-        
-        if (document.readyState == "complete") { // already here!
-            onReady();
-        } else if (lib.env.ie && document.attachEvent) {
-            // like IE
-            
-            // not an iframe...
-            if (document.documentElement.doScroll && window == top) {
-                (function() {
-                    try {
-                        document.documentElement.doScroll("left");
-                    } catch(error) {
-                        setTimeout(arguments.callee, 0);
-                        return;
-                    }
-                    
-                    // and execute any waiting functions
-                    onReady();
-                })();
-            } else {
-                // an iframe...
-                document.attachEvent(
-                    "onreadystatechange",
-                    function() {
-                        if (document.readyState == "complete") {
-                            document.detachEvent("onreadystatechange", arguments.callee);
-                            onReady();
-                        }
-                    }
-                );
-            }
-        } else if (document.readyState) {
-            // like pre Safari
-            (function() {
-                if (/loaded|complete/.test(document.readyState)) {
-                    onReady();
-                } else {
-                    setTimeout(arguments.callee, 0);
-                }
-            })();
-        } else if (document.addEventListener) {
-            // like Mozilla, Opera and recent webkit
-            document.addEventListener( 
-                "DOMContentLoaded",
-                function() {
-                    document.removeEventListener("DOMContentLoaded", arguments.callee, false);
-                    onReady();
-                },
-                false
-            );
-        } else {
-            throw new Error("Unable to bind lib ready listener to document.");
-        }
-    })();
 })(window);
 (function(lib, undefined) {
+    
     lib.util = {
         getType: function getType(object) {
-            if (object === null) { return "null"; }
-            else if (Object.prototype.toString.call(object) === "[object Function]") { return "Function"; }
-            else if (Object.prototype.toString.call(object) === "[object Array]") { return "Array"; }
-            else if (typeof object == "object") return this.getFunctionName(object.constructor);
+            var op = Object.prototype,
+                string = op.toString.call(object);
+            
+            if (object === null) {
+                return "null";
+            } else if (object === true || object === false) {
+                return "boolean";
+            } else if (string == "[object Array]") {
+                return "Array";
+            } else if (string == "[object Arguments]" || !!(op.hasOwnProperty.call(object, "callee"))) {
+                return "Arguments";
+            } else if (string == "[object Function]") {
+                return "Function";
+            } else if (string == "[object String]") {
+                return "String";
+            } else if (string == "[object Number]") {
+                return "Number";
+            } else if (string == "[object Date]") {
+                return "Date";
+            } else if (string == "[object RegExp]") {
+                return "RegExp";
+            } else if (typeof object == "object") {
+                return this.getFunctionName(object.constructor);
+            }
         },
         
-        isFunction: function isFunction(object) {
-            return this.getType(object) == "Function";
+        isObject: function isObject(object) {
+            return object === Object(object);
         },
         
         isArray: function isArray(object) {
             return this.getType(object) == "Array";
         },
         
-        isObject: function isObject(object) {
-            return this.getType(object) == "Object";
+        isArguments: function isArguments(object) {
+            return this.getType(object) == "Arguments";
+        },
+        
+        isFunction: function isFunction(object) {
+            return this.getType(object) == "Function";
+        },
+        
+        isString: function isString(object) {
+            return this.getType(object) == "String";
+        },
+        
+        isNumber: function isNumber(object) {
+            return this.getType(object) == "Number";
+        },
+        
+        isDate: function isDate(object) {
+            return this.getType(object) == "Date";
+        },
+        
+        isRegExp: function isRegExp(object) {
+            return this.getType(object) == "RegExp";
         },
         
         getFunctionName: function getFunctionName(func) {
@@ -259,12 +214,20 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         if (this == lib.util) return new Bindable(value);
         
         this.__guid = lib.guid();
-        this._callbacks = [];
+        this._bound = [];
         
         this.value = value;
     };
     
     lib.extend(Bindable.prototype, {
+        toString: function toString() {
+            return "[object Bindable]";
+        },
+        
+        valueOf: function valueOf() {
+            return this.get();
+        },
+        
         get: function get() {
             return this.value;
         },
@@ -272,29 +235,38 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         set: function set(value) {
             var oldValue = this.value;
             this.value = value;
-            lib.array.forEach(this._callbacks, lib.bind(function(n) {
-                n(this.value, oldValue);
+            
+            lib.array.forEach(this._bound, lib.bind(function(callback) {
+                if (lib.util.isArray(callback)) {
+                    callback[0][callback[1]] = this.value;
+                } else {
+                    callback.call(this, this.value, oldValue);
+                }
             }, this));
+            
             return this;
         },
         
-        addListener: function addListener(callback) {
-            if (!lib.util.isFunction(callback)) return;
-            this._callbacks.push(callback);
+        bind: function bind(target, property) {
+            if (target && typeof property == "string") {
+                this._bound.push([target, property]);
+            } else if (lib.util.isFunction(target)) {
+                this._bound.push(target);
+            }
         },
         
-        removeListener: function removeListener(callback) {
-            if (callback) {
-                if (!lib.util.isFunction(callback)) return;
-                var cb = this._callbacks;
-                for (var i = 0, l = cb.length; i < l; i++) {
-                    if (cb[i] === callback) {
-                        cb.splice(i, 1);
+        unbind: function unbind(target, property) {
+            if (target) {
+                var bound = this._bound,
+                    test;
+                for (var i = 0, l = bound.length; i < l; i++) {
+                    if (bound[i] === target || bound[i][0] === target && bound[i][1] === property) {
+                        bound.splice(i, 1);
                         break;
                     }
                 }
             } else {
-                this.callbacks = [];
+                this._bound = [];
             }
         }
     });
@@ -349,11 +321,22 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             return array;
         },
         
-        inArray: function inArray(array, object) {
+        indexOf: function indexOf(array, object) {
             for (var i = 0, len = array.length; i < len; i++) {
-                if (array[i] === object) return true;
+                if (array[i] === object) return i;
             }
-            return false;
+            return -1;
+        },
+        
+        lastIndexOf: function lastIndexOf(array, object) {
+            for (var len = array.length, i = len - 1; i >= 0; i--) {
+                if (array[i] === object) return i;
+            }
+            return -1;
+        },
+        
+        inArray: function inArray(array, object) {
+            return (this.indexOf(array, object) > -1) ? true : false;
         },
         
         forEach: function forEach(array, callback, thisObject) {
@@ -1594,6 +1577,70 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     };
 })(lib);
 (function(lib, undefined) {
+    if (lib.isDOMReady) return;
+    
+    function onReady() {
+        if (!lib.isDOMReady) {
+            lib.isDOMReady = true;
+            lib.event.dispatch(document, "DOMReady", { safe: true });
+            lib.event.remove(lib.document, "libReady");
+        }
+    };
+    
+    if (document.readyState == "complete") { // already here!
+        onReady();
+    } else if (!window.opera && document.attachEvent) {
+        // like IE
+        
+        // not an iframe...
+        if (document.documentElement.doScroll && window == top) {
+            (function() {
+                try {
+                    document.documentElement.doScroll("left");
+                } catch(error) {
+                    setTimeout(arguments.callee, 0);
+                    return;
+                }
+                
+                // and execute any waiting functions
+                onReady();
+            })();
+        } else {
+            // an iframe...
+            document.attachEvent(
+                "onreadystatechange",
+                function() {
+                    if (document.readyState == "complete") {
+                        document.detachEvent("onreadystatechange", arguments.callee);
+                        onReady();
+                    }
+                }
+            );
+        }
+    } else if (document.readyState) {
+        // like pre Safari
+        (function() {
+            if (/loaded|complete/.test(document.readyState)) {
+                onReady();
+            } else {
+                setTimeout(arguments.callee, 0);
+            }
+        })();
+    } else if (document.addEventListener) {
+        // like Mozilla, Opera and recent webkit
+        document.addEventListener( 
+            "DOMContentLoaded",
+            function() {
+                document.removeEventListener("DOMContentLoaded", arguments.callee, false);
+                onReady();
+            },
+            false
+        );
+    } else {
+        throw new Error("Unable to bind lib ready listener to document.");
+    }
+})(lib);
+(function(lib, undefined) {
     lib.dimensions = {
         CONTENT: 1,
         BORDER: 2,
@@ -1622,6 +1669,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }
     };
 })(lib);
+if (!window.opera) try { document.execCommand("BackgroundImageCache", false, true); } catch(e) {};
 (function(lib, undefined) {
     lib.tween = {
         // http://st-on-it.blogspot.com/2011/05/calculating-cubic-bezier-function.html
@@ -1875,4 +1923,3 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     lib.widget.Model = Model;
     
 })(lib);
-if (!window.opera) try { document.execCommand("BackgroundImageCache", false, true); } catch(e) {};
