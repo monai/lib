@@ -9,6 +9,14 @@
     };
     
     lib.extend(Bindable.prototype, {
+        toString: function toString() {
+            return "[object Bindable]";
+        },
+        
+        valueOf: function valueOf() {
+            return this.get();
+        },
+        
         get: function get() {
             return this.value;
         },
