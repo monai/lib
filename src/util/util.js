@@ -1,22 +1,63 @@
 (function(lib, undefined) {
+    
     lib.util = {
         getType: function getType(object) {
-            if (object === null) { return "null"; }
-            else if (Object.prototype.toString.call(object) === "[object Function]") { return "Function"; }
-            else if (Object.prototype.toString.call(object) === "[object Array]") { return "Array"; }
-            else if (typeof object == "object") return this.getFunctionName(object.constructor);
+            var op = Object.prototype,
+                string = op.toString.call(object);
+            
+            if (object === null) {
+                return "null";
+            } else if (object === true || object === false) {
+                return "boolean";
+            } else if (string == "[object Array]") {
+                return "Array";
+            } else if (string == "[object Arguments]" || !!(op.hasOwnProperty.call(object, "callee"))) {
+                return "Arguments";
+            } else if (string == "[object Function]") {
+                return "Function";
+            } else if (string == "[object String]") {
+                return "String";
+            } else if (string == "[object Number]") {
+                return "Number";
+            } else if (string == "[object Date]") {
+                return "Date";
+            } else if (string == "[object RegExp]") {
+                return "RegExp";
+            } else if (typeof object == "object") {
+                return this.getFunctionName(object.constructor);
+            }
         },
         
-        isFunction: function isFunction(object) {
-            return this.getType(object) == "Function";
+        isObject: function isObject(object) {
+            return object === Object(object);
         },
         
         isArray: function isArray(object) {
             return this.getType(object) == "Array";
         },
         
-        isObject: function isObject(object) {
-            return this.getType(object) == "Object";
+        isArguments: function isArguments(object) {
+            return this.getType(object) == "Arguments";
+        },
+        
+        isFunction: function isFunction(object) {
+            return this.getType(object) == "Function";
+        },
+        
+        isString: function isString(object) {
+            return this.getType(object) == "String";
+        },
+        
+        isNumber: function isNumber(object) {
+            return this.getType(object) == "Number";
+        },
+        
+        isDate: function isDate(object) {
+            return this.getType(object) == "Date";
+        },
+        
+        isRegExp: function isRegExp(object) {
+            return this.getType(object) == "RegExp";
         },
         
         getFunctionName: function getFunctionName(func) {
