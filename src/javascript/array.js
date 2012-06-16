@@ -12,14 +12,20 @@
         
         indexOf: function indexOf(array, object) {
             for (var i = 0, len = array.length; i < len; i++) {
-                if (array[i] === object) return i;
+                var found = lib.util.isArray(object)
+                            ? this.isEqual(array[i], object)
+                            : array[i] === object;
+                if (found) return i;
             }
             return -1;
         },
         
         lastIndexOf: function lastIndexOf(array, object) {
             for (var len = array.length, i = len - 1; i >= 0; i--) {
-                if (array[i] === object) return i;
+                var found = lib.util.isArray(object)
+                            ? this.isEqual(array[i], object)
+                            : array[i] === object;
+                if (found) return i;
             }
             return -1;
         },
@@ -101,7 +107,8 @@
             if (typeof callback != "function") throw new TypeError(callback + " is not a function");
             
             if ("reduce" in array) {
-                return array.reduce(callback, initialValue);
+                var args = initialValue ? [callback, initialValue] : [callback];
+                return Array.prototype.reduce.apply(array, args);
             } else {
                 var len = array.length,
                     isUndefined = typeof initialValue == "undefined";
@@ -124,7 +131,8 @@
             if (typeof callback != "function") throw new TypeError(callback + " is not a function");
             
             if ("reduceRight" in array) {
-                return array.reduceRight(callback, initialValue);
+                var args = initialValue ? [callback, initialValue] : [callback];
+                return Array.prototype.reduceRight.apply(array, args);
             } else {
                 var len = array.length,
                     isUndefined = typeof initialValue == "undefined";
@@ -143,7 +151,7 @@
             }
         },
         
-        equal: function equal(array) {
+        isEqual: function isEqual(array) {
             var out = true,
                 len = array.length;
             for (var i = 1, argsLen = arguments.length; i < argsLen; i++) {
@@ -151,7 +159,7 @@
                 for (var j = 0; j < len; j++) {
                     if (array[j] instanceof Array || arguments[i][j] instanceof Array) {
                         if (array[j] instanceof Array && arguments[i][j] instanceof Array) {
-                            out = this.equal(array[j], arguments[i][j]);
+                            out = this.isEqual(array[j], arguments[i][j]);
                             if (!out) break;
                         } else {
                             return false;
@@ -166,46 +174,37 @@
             return out;
         },
         
-        subtract: function subtract(array) {
-            var outPrev = array,
-                outCurr = [],
-                subtrahend = [];
-            
-            for (var i = 1, argsLen = arguments.length; i < argsLen; i++) {
-                if (arguments[i] instanceof Array) {
-                    for (var j = 0, len = arguments[i].length; j < len; j++) {
-                        subtrahend.push(arguments[i][j]);
-                    }
-                } else {
-                    subtrahend.push(arguments[i]);
-                }
-            }
-            
-            for (var i = 0, len = subtrahend.length; i < len; i++) {
-                for (var j = 0, outLen = outPrev.length; j < outLen; j++) {
-                    if (subtrahend[i] instanceof Array) {
-                        if (!this.equal(outPrev[j], subtrahend[i])) {
-                            outCurr.push(outPrev[j]);
-                        }
-                    } else {
-                        if (outPrev[j] != subtrahend[i]) {
-                            outCurr.push(outPrev[j]);
-                        }
-                    }
-                }
-                outPrev = outCurr;
-                outCurr = [];
-            }
-            return outPrev;
+        flatten: function flatten(array) {
+            return this.reduce(array, function(prev, curr) {
+                return prev.concat(curr);
+            });
         },
         
-        intersect: function intersect(array) {
-            var out = array;
-            for (var i = 1, len = arguments.length; i < len; i++) {
-                var tmp = this.subtract(array, arguments[i]);
-                out = this.subtract(out, tmp);
-            }
-            return out;
+        unique: function unique(array) {
+            return lib.array.reduce(array, lib.bind(function(prev, curr) {
+                if (!this.inArray(prev, curr)) prev.push(curr);
+                return prev;
+            },this), []);
+        },
+        
+        union: function union() {
+            return this.unique(this.flatten(this.toArray(arguments)));
+        },
+        
+        difference: function difference(array) {
+            var rest = this.unique(this.flatten(this.toArray(arguments).slice(1)));
+            return this.filter(array, lib.bind(function(value) {
+                return !this.inArray(rest, value);
+            }, this));
+        },
+        
+        intersection: function intersection(array) {
+            var rest = this.toArray(arguments).slice(1);
+            return this.filter(this.unique(array), lib.bind(function(item) {
+                return this.every(rest, lib.bind(function(other) {
+                    return this.indexOf(other, item) >= 0;
+                }, this));
+            }, this));
         }
     };
 })(lib);
