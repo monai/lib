@@ -8,6 +8,14 @@
             return (element || lib.document).getElementsByTagName(name);
         },
         
+        byQuery: function byQuery(query, element) {
+            return (element || lib.document).querySelector(name);
+        },
+        
+        byQueryAll: function byQueryAll(query, element) {
+            return (element || lib.document).querySelectorAll(name);
+        },
+        
         byClass: function byClass(klass, tag, element) {
             if (typeof tag == "object" && typeof element == "undefined") {
                 element = tag;
