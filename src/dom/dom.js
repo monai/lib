@@ -213,7 +213,9 @@
         NOTATION_NODE: 2048,
         
         isDOMNode: function isDOMNode(element) {
-            if (!(element || "nodeType" in element || typeof element.nodeType == "number")) return false;
+            if (!(lib.util.isObject(element)
+              && ("nodeType" in element || typeof element.nodeType == "number")
+                )) return false;
             return element.nodeType > 0 && element.nodeType < 13;
         },
         

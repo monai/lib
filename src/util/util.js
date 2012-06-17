@@ -4,9 +4,10 @@
         getType: function getType(object) {
             var op = Object.prototype,
                 string = op.toString.call(object);
-            
             if (object === null) {
                 return "null";
+            } else if (object === undefined) {
+                return "undefined"
             } else if (object === true || object === false) {
                 return "boolean";
             } else if (string == "[object Array]") {
