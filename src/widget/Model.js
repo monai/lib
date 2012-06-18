@@ -4,72 +4,34 @@
         if (!lib.util.isObject(object)) return;
         
         this.__guid = lib.guid();
+        this._bound = [];
         
         if (element && lib.dom.isTypeOf(element, lib.dom.ELEMENT_NODE)) {
             this._element = element;
-            this._eventName = "__widgetModelPropertyChange" + this.__guid;
-            this._callbacks = {
-                original: [],
-                bound: []
-            };
         }
         
         for (var prop in object) {
             var _this = this,
-                bindableProp = this[prop] = lib.util.Bindable(object[prop]);
-            bindableProp.name = prop;
-            
-            if (this._element) {
-                bindableProp.addListener(lib.bind(function(val, old) {
-                    var prop = this.name,
-                        eventName = _this._eventName + prop;
-                    lib.event.dispatch(_this._element, eventName, {
-                        property: prop,
-                        value: val,
-                        oldValue: old
-                    });
-                }, bindableProp));
-            }
+                propBindable = this[prop] = this._element
+                                            ? lib.util.Bindable(object[prop], this._element)
+                                            : lib.util.Bindable(object[prop]);
+            propBindable.name = prop;
         }
     };
     
     lib.extend(Model.prototype, {
-        addListener: function addListener(prop, callback) {
-            if (!lib.util.isFunction(callback)) return;
-            if (this._element) {
-                var eventName = this._eventName + prop,
-                    bound = function(event) {
-                        callback(event.value, event.oldValue);
-                    };
-                
-                this._callbacks.original.push(callback);
-                this._callbacks.bound.push(bound);
-                
-                lib.event.add(this._element, eventName, bound);
-            } else {
-                this[prop].addListener(callback);
-            }
+        bind: function bind(target) {
+            
         },
         
-        removeListener: function removeListener(prop, callback) {
-            if (this._element) {
-                var eventName = this._eventName + prop,
-                    cb = this._callbacks,
-                    bound;
-                
-                for (var i = 0, l = cb.original.length; i < l; i++) {
-                    if (cb.original[i] === callback) {
-                        lib.event.remove(this._element, eventName, cb.bound[i]);
-                        cb.original.splice(i, 1);
-                        cb.bound.splice(i, 1);
-                        break;
-                    }
-                }
-            } else {
-                this[prop].removeListener(callback);
-            }
+        unbind: function unbind(target) {
+            
         }
     });
+    
+    function callAllBound(value, oldValue, property) {
+        
+    };
     
     lib.widget.Model = Model;
     
