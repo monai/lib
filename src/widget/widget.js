@@ -15,6 +15,10 @@
             this.__bound[method] = this[method];
         },
         
+        dispose: function dispose() {
+            /* must be implemented in widget */
+        },
+        
         call: function call(method) {
             var args = lib.array.toArray(arguments);
             args.shift();
@@ -68,6 +72,19 @@
                 widget = new this.widgetConstructor(null, properties);
             }
             return widget;
+        },
+        
+        destroy: function destroy(widget) {
+            for (var i = 0, l = this.items.length; i < l; i++) {
+                if (widget && widget != this.items[i]) continue;
+                
+                widget.dispose();
+                
+                var type = lib.util.getType(widget);
+                delete widget.element.__widgets[type];
+                this.items.splice(i, 1);
+                this.length--;
+            }
         },
         
         item: function item(n) {
