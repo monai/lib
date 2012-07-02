@@ -52,6 +52,10 @@
             return str.replace(/\{(\d+)\}/g, function(s, n) {
                 return args[parseInt(n)];
             });
+        },
+        
+        camelToDash: function camelToDash(str) {
+            return str.replace(/[A-Z]/g, function(match) { return "-" + match.toLowerCase(); });
         }
     };
 })(lib);

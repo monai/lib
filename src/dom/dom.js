@@ -237,18 +237,30 @@
                     return values;
                 };
                 
-                if (element.dataset) return element.dataset[key];
-                else return element.getAttribute("data-" + key);
+                if (element.dataset) {
+                    return element.dataset[key];
+                } else {
+                    key = lib.string.camelToDash(key);
+                    return element.getAttribute("data-" + key);
+                }
             },
             
             set: function set(element, key, value) {
-                if (element.dataset) element.dataset[key] = value;
-                else element.setAttribute("data-" + key, value || "");
+                if (element.dataset) {
+                    element.dataset[key] = value;
+                } else {
+                    key = lib.string.camelToDash(key);
+                    element.setAttribute("data-" + key, value || "");
+                }
             },
             
             remove: function remove(element, key) {
-                if (element.dataset) delete element.dataset[key];
-                else element.removeAttribute("data-" + key);
+                if (element.dataset) {
+                    delete element.dataset[key];
+                } else {
+                    key = lib.string.camelToDash(key);
+                    element.removeAttribute("data-" + key);
+                }
             }
         }
     };
