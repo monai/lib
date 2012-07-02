@@ -95,9 +95,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         getType: function getType(object) {
             var op = Object.prototype,
                 string = op.toString.call(object);
-            
             if (object === null) {
                 return "null";
+            } else if (object === undefined) {
+                return "undefined"
             } else if (object === true || object === false) {
                 return "boolean";
             } else if (string == "[object Array]") {
@@ -210,16 +211,30 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     
 })(lib);
 (function(lib, undefined) {
-    function Bindable(value) {
-        if (this == lib.util) return new Bindable(value);
+    function Bindable(value, element) {
+        if (this == lib.util) return new Bindable(value, element);
         
         this.__guid = lib.guid();
-        this._bound = [];
+        this._bound = {};
+        
+        if (arguments.length == 1 && lib.dom.isTypeOf(element, lib.dom.ELEMENT_NODE)) {
+            element = value;
+            value = undefined;
+        }
         
         this.value = value;
+        
+        if (element) {
+            this._element = element;
+            this._eventName = "__bindableChange" + this.__guid;
+        }
     };
     
     lib.extend(Bindable.prototype, {
+        dispose: function dispose() {
+            this.unbind();
+        },
+        
         toString: function toString() {
             return "[object Bindable]";
         },
@@ -236,40 +251,74 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             var oldValue = this.value;
             this.value = value;
             
-            lib.array.forEach(this._bound, lib.bind(function(callback) {
-                if (lib.util.isArray(callback)) {
-                    callback[0][callback[1]] = this.value;
-                } else {
-                    callback.call(this, this.value, oldValue);
-                }
-            }, this));
+            if (this._element) {
+                lib.event.dispatch(this._element, this._eventName, { value: this.value, oldValue: oldValue });
+            } else {
+                lib.bind(callAllBound, this)(this.value, oldValue);
+            }
             
             return this;
         },
         
         bind: function bind(target, property) {
+            var id = lib.guid(),
+                bound = {
+                    id: id,
+                    target: null,
+                    proxy: null
+                };
+            
             if (target && typeof property == "string") {
-                this._bound.push([target, property]);
+                bound.target = [target, property];
             } else if (lib.util.isFunction(target)) {
-                this._bound.push(target);
+                bound.target = target;
+            }
+            this._bound[id] = bound;
+            
+            if (this._element) {
+                bound.proxy = lib.bind(function(event) {
+                    lib.bind(callBound, this)(id, event.value, event.oldValue);
+                }, this);
+                lib.event.add(this._element, this._eventName, bound.proxy);
             }
         },
         
         unbind: function unbind(target, property) {
-            if (target) {
-                var bound = this._bound,
-                    test;
-                for (var i = 0, l = bound.length; i < l; i++) {
-                    if (bound[i] === target || bound[i][0] === target && bound[i][1] === property) {
-                        bound.splice(i, 1);
-                        break;
+            var bound = this._bound;
+            
+            for (var i in bound) {
+                var bTarget = bound[i].target,
+                    specificTarget = (bTarget === target
+                                      || lib.util.isArray(bTarget)
+                                         && bTarget[0] === target
+                                         && bTarget[1] === property);
+                
+                if (specificTarget || !target) {
+                    if (this._element) {
+                        lib.event.remove(this._element, this._eventName, this._bound[i].proxy);
                     }
+                    delete bound[i];
                 }
-            } else {
-                this._bound = [];
+                
+                if (specificTarget) break;
             }
         }
     });
+    
+    function callAllBound(value, oldValue) {
+        for (var i in this._bound) {
+            callBound.call(this, i, value, oldValue);
+        }
+    };
+    
+    function callBound(id, value, oldValue) {
+        var bound = this._bound[id];
+        if (lib.util.isArray(bound.target)) {
+            bound.target[0][bound.target[1]] = value;
+        } else {
+            bound.target.call(this, value, oldValue);
+        }
+    };
     
     lib.util.Bindable = Bindable;
     
@@ -323,14 +372,20 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         
         indexOf: function indexOf(array, object) {
             for (var i = 0, len = array.length; i < len; i++) {
-                if (array[i] === object) return i;
+                var found = lib.util.isArray(object)
+                            ? this.isEqual(array[i], object)
+                            : array[i] === object;
+                if (found) return i;
             }
             return -1;
         },
         
         lastIndexOf: function lastIndexOf(array, object) {
             for (var len = array.length, i = len - 1; i >= 0; i--) {
-                if (array[i] === object) return i;
+                var found = lib.util.isArray(object)
+                            ? this.isEqual(array[i], object)
+                            : array[i] === object;
+                if (found) return i;
             }
             return -1;
         },
@@ -412,7 +467,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             if (typeof callback != "function") throw new TypeError(callback + " is not a function");
             
             if ("reduce" in array) {
-                return array.reduce(callback, initialValue);
+                var args = initialValue ? [callback, initialValue] : [callback];
+                return Array.prototype.reduce.apply(array, args);
             } else {
                 var len = array.length,
                     isUndefined = typeof initialValue == "undefined";
@@ -435,7 +491,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             if (typeof callback != "function") throw new TypeError(callback + " is not a function");
             
             if ("reduceRight" in array) {
-                return array.reduceRight(callback, initialValue);
+                var args = initialValue ? [callback, initialValue] : [callback];
+                return Array.prototype.reduceRight.apply(array, args);
             } else {
                 var len = array.length,
                     isUndefined = typeof initialValue == "undefined";
@@ -454,7 +511,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             }
         },
         
-        equal: function equal(array) {
+        isEqual: function isEqual(array) {
             var out = true,
                 len = array.length;
             for (var i = 1, argsLen = arguments.length; i < argsLen; i++) {
@@ -462,7 +519,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 for (var j = 0; j < len; j++) {
                     if (array[j] instanceof Array || arguments[i][j] instanceof Array) {
                         if (array[j] instanceof Array && arguments[i][j] instanceof Array) {
-                            out = this.equal(array[j], arguments[i][j]);
+                            out = this.isEqual(array[j], arguments[i][j]);
                             if (!out) break;
                         } else {
                             return false;
@@ -477,46 +534,37 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             return out;
         },
         
-        subtract: function subtract(array) {
-            var outPrev = array,
-                outCurr = [],
-                subtrahend = [];
-            
-            for (var i = 1, argsLen = arguments.length; i < argsLen; i++) {
-                if (arguments[i] instanceof Array) {
-                    for (var j = 0, len = arguments[i].length; j < len; j++) {
-                        subtrahend.push(arguments[i][j]);
-                    }
-                } else {
-                    subtrahend.push(arguments[i]);
-                }
-            }
-            
-            for (var i = 0, len = subtrahend.length; i < len; i++) {
-                for (var j = 0, outLen = outPrev.length; j < outLen; j++) {
-                    if (subtrahend[i] instanceof Array) {
-                        if (!this.equal(outPrev[j], subtrahend[i])) {
-                            outCurr.push(outPrev[j]);
-                        }
-                    } else {
-                        if (outPrev[j] != subtrahend[i]) {
-                            outCurr.push(outPrev[j]);
-                        }
-                    }
-                }
-                outPrev = outCurr;
-                outCurr = [];
-            }
-            return outPrev;
+        flatten: function flatten(array) {
+            return this.reduce(array, function(prev, curr) {
+                return prev.concat(curr);
+            });
         },
         
-        intersect: function intersect(array) {
-            var out = array;
-            for (var i = 1, len = arguments.length; i < len; i++) {
-                var tmp = this.subtract(array, arguments[i]);
-                out = this.subtract(out, tmp);
-            }
-            return out;
+        unique: function unique(array) {
+            return lib.array.reduce(array, lib.bind(function(prev, curr) {
+                if (!this.inArray(prev, curr)) prev.push(curr);
+                return prev;
+            },this), []);
+        },
+        
+        union: function union() {
+            return this.unique(this.flatten(this.toArray(arguments)));
+        },
+        
+        difference: function difference(array) {
+            var rest = this.unique(this.flatten(this.toArray(arguments).slice(1)));
+            return this.filter(array, lib.bind(function(value) {
+                return !this.inArray(rest, value);
+            }, this));
+        },
+        
+        intersection: function intersection(array) {
+            var rest = this.toArray(arguments).slice(1);
+            return this.filter(this.unique(array), lib.bind(function(item) {
+                return this.every(rest, lib.bind(function(other) {
+                    return this.indexOf(other, item) >= 0;
+                }, this));
+            }, this));
         }
     };
 })(lib);
@@ -574,6 +622,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
             return str.replace(/\{(\d+)\}/g, function(s, n) {
                 return args[parseInt(n)];
             });
+        },
+        
+        camelToDash: function camelToDash(str) {
+            return str.replace(/[A-Z]/g, function(match) { return "-" + match.toLowerCase(); });
         }
     };
 })(lib);
@@ -714,6 +766,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         
         byTag: function byTag(name, element) {
             return (element || lib.document).getElementsByTagName(name);
+        },
+        
+        byQuery: function byQuery(query, element) {
+            return (element || lib.document).querySelector(name);
+        },
+        
+        byQueryAll: function byQueryAll(query, element) {
+            return (element || lib.document).querySelectorAll(name);
         },
         
         byClass: function byClass(klass, tag, element) {
@@ -913,7 +973,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         NOTATION_NODE: 2048,
         
         isDOMNode: function isDOMNode(element) {
-            if (!(element || "nodeType" in element || typeof element.nodeType == "number")) return false;
+            if (!(lib.util.isObject(element)
+              && ("nodeType" in element || typeof element.nodeType == "number")
+                )) return false;
             return element.nodeType > 0 && element.nodeType < 13;
         },
         
@@ -935,18 +997,30 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     return values;
                 };
                 
-                if (element.dataset) return element.dataset[key];
-                else return element.getAttribute("data-" + key);
+                if (element.dataset) {
+                    return element.dataset[key];
+                } else {
+                    key = lib.string.camelToDash(key);
+                    return element.getAttribute("data-" + key);
+                }
             },
             
             set: function set(element, key, value) {
-                if (element.dataset) element.dataset[key] = value;
-                else element.setAttribute("data-" + key, value || "");
+                if (element.dataset) {
+                    element.dataset[key] = value;
+                } else {
+                    key = lib.string.camelToDash(key);
+                    element.setAttribute("data-" + key, value || "");
+                }
             },
             
             remove: function remove(element, key) {
-                if (element.dataset) delete element.dataset[key];
-                else element.removeAttribute("data-" + key);
+                if (element.dataset) {
+                    delete element.dataset[key];
+                } else {
+                    key = lib.string.camelToDash(key);
+                    element.removeAttribute("data-" + key);
+                }
             }
         }
     };
@@ -1778,9 +1852,10 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
 })(lib);
 (function(lib, undefined) {
     function Widget(element) {
+        this.__guid = lib.guid();
         this.__bound = {};
         
-        if (lib.dom.isTypeOf(element, lib.dom.ELEMENT_NODE)) {
+        if (lib.dom.isTypeOf(element, lib.dom.ELEMENT_NODE | lib.dom.DOCUMENT_NODE) || element == lib.window) {
             this.element = element;
             this.element.__widgets = {};
             this.element.__widgets[lib.util.getType(this)] = this;
@@ -1788,25 +1863,80 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
     };
     
     lib.extend(Widget.prototype, {
-        bind: function bind(method) {
+        _bind: function _bind(method) {
             this.__bound[method] = this[method];
+        },
+        
+        dispose: function dispose() {
+            /* must be implemented in widget */
+        },
+        
+        call: function call(method) {
+            var args = lib.array.toArray(arguments);
+            args.shift();
+            args.shift();
+            return this.apply(method, args);
+        },
+        
+        apply: function apply(method, args) {
+            var methodFunction;
+            
+            try {
+                methodFunction = widget.__bound[method];
+                return methodFunction.apply(widget, args);
+            } catch (e) {
+                throw new Error("method " + method + " isn't bound");
+            }
         }
     });
     
-    function WidgetRunner(widgetConstructor, bind) {
+    function WidgetFactory(widgetConstructor, bind) {
         this.widgetConstructor = widgetConstructor;
         this.items = [];
         this.length = 0;
         this.name = lib.util.getFunctionName(this.widgetConstructor);
     };
     
-    lib.extend(WidgetRunner.prototype, {
-        run: function run(elements) {
+    lib.extend(WidgetFactory.prototype, {
+        run: function run(elements, properties) {
+            var widget;
             elements = lib.util.isArray(elements) ? lib.array.toArray(elements) : [elements];
             lib.array.forEach(elements, lib.bind(function(element) {
-                this.items.push(new this.widgetConstructor(element));
+                widget = new this.widgetConstructor(element, properties);
+                this.items.push(widget);
                 this.length++;
             }, this));
+            
+            return widget;
+        },
+        
+        create: function create(elementize, properties) {
+            if (elementize !== true && !!elementize != false && arguments.length == 1) {
+                properties = elementize;
+                elementize = false;
+            }
+            
+            var widget;
+            if (elementize) {
+                var element = lib.dom.create("<div>");
+                widget = new this.widgetConstructor(element, properties);
+            } else {
+                widget = new this.widgetConstructor(null, properties);
+            }
+            return widget;
+        },
+        
+        destroy: function destroy(widget) {
+            for (var i = 0, l = this.items.length; i < l; i++) {
+                if (widget && widget != this.items[i]) continue;
+                
+                widget.dispose();
+                
+                var type = lib.util.getType(widget);
+                delete widget.element.__widgets[type];
+                this.items.splice(i, 1);
+                this.length--;
+            }
         },
         
         item: function item(n) {
@@ -1821,9 +1951,8 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
         },
         
         apply: function apply(element, method, args) {
-            var widget = lib.widget.get(element, this.name),
-                method = widget.__bound[method];
-            if (lib.util.isFunction(method)) return method.apply(widget, args);
+            var widget = lib.widget.get(element, this.name);
+            return widget.apply(method, args);
         }
     });
     
@@ -1833,12 +1962,12 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
         create: function create(constructor, prototype) {
             lib.util.inherits(constructor, Widget);
             lib.extend(constructor.prototype, prototype);
-            return new WidgetRunner(constructor);
+            return new WidgetFactory(constructor);
         },
         
         get: function get(element, name) {
             if (lib.dom.isTypeOf(element, lib.dom.ELEMENT_NODE) && element.__widgets) {
-                name = (name instanceof WidgetRunner) ? name.name : name;
+                name = (name instanceof WidgetFactory) ? name.name : name;
                 return element.__widgets[name] || null;
             } else {
                 return null;
@@ -1853,72 +1982,89 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
         if (!lib.util.isObject(object)) return;
         
         this.__guid = lib.guid();
+        this._bound = {};
         
         if (element && lib.dom.isTypeOf(element, lib.dom.ELEMENT_NODE)) {
             this._element = element;
-            this._eventName = "__widgetModelPropertyChange" + this.__guid;
-            this._callbacks = {
-                original: [],
-                bound: []
-            };
+            this._eventName = "__modelChange" + this.__guid;
         }
         
         for (var prop in object) {
             var _this = this,
-                bindableProp = this[prop] = lib.util.Bindable(object[prop]);
-            bindableProp.name = prop;
-            
-            if (this._element) {
-                bindableProp.addListener(lib.bind(function(val, old) {
-                    var prop = this.name,
-                        eventName = _this._eventName + prop;
-                    lib.event.dispatch(_this._element, eventName, {
-                        property: prop,
-                        value: val,
-                        oldValue: old
-                    });
-                }, bindableProp));
-            }
+                propBindable = this[prop] = this._element
+                                            ? lib.util.Bindable(object[prop], this._element)
+                                            : lib.util.Bindable(object[prop]);
+            propBindable.name = prop;
+            propBindable.model = this;
+            propBindable.bind(dispatcher);
         }
     };
     
     lib.extend(Model.prototype, {
-        addListener: function addListener(prop, callback) {
-            if (!lib.util.isFunction(callback)) return;
-            if (this._element) {
-                var eventName = this._eventName + prop,
-                    bound = function(event) {
-                        callback(event.value, event.oldValue);
-                    };
-                
-                this._callbacks.original.push(callback);
-                this._callbacks.bound.push(bound);
-                
-                lib.event.add(this._element, eventName, bound);
-            } else {
-                this[prop].addListener(callback);
+        dispose: function dispose() {
+            this.unbind();
+            for (var i in this) {
+                if (this[i] instanceof lib.util.Bindable) {
+                    this[i].dispose();
+                }
             }
         },
         
-        removeListener: function removeListener(prop, callback) {
+        bind: function bind(target) {
+            if (!lib.util.isFunction(target)) return;
+            
+            var id = lib.guid(),
+                bound = {
+                    id: id,
+                    target: target,
+                    proxy: null
+                };
+            this._bound[id] = bound;
+            
             if (this._element) {
-                var eventName = this._eventName + prop,
-                    cb = this._callbacks,
-                    bound;
-                
-                for (var i = 0, l = cb.original.length; i < l; i++) {
-                    if (cb.original[i] === callback) {
-                        lib.event.remove(this._element, eventName, cb.bound[i]);
-                        cb.original.splice(i, 1);
-                        cb.bound.splice(i, 1);
-                        break;
+                bound.proxy = lib.bind(function(event) {
+                    lib.bind(callBound, this)(id, event.value, event.oldValue, event.property);
+                }, this);
+                lib.event.add(this._element, this._eventName, bound.proxy);
+            }
+        },
+        
+        unbind: function unbind(target) {
+            var bound = this._bound;
+            
+            for (var i in bound) {
+                var specificTarget = bound[i].target == target;
+                if (specificTarget || !target) {
+                    if (this._element) {
+                        lib.event.remove(this._element, this._eventName, this._bound[i].proxy);
                     }
+                    delete bound[i];
                 }
-            } else {
-                this[prop].removeListener(callback);
+                
+                if (specificTarget) break;
             }
         }
     });
+    
+    function dispatcher(value, oldValue) {
+        var model = this.model;
+        if (model._element) {
+            lib.event.dispatch(model._element, model._eventName, { value: value, oldValue: oldValue, property: this.name });
+        } else {
+            callAllBound.call(model, value, oldValue, this.name);
+        }
+    };
+    
+    function callAllBound(value, oldValue, property) {
+        for (var i in this._bound) {
+            callBound.call(this, i, value, oldValue, property);
+        }
+    };
+    
+    function callBound(id, value, oldValue, property) {
+        var bound = this._bound[id];
+        bound.target.call(this, value, oldValue, property);
+    };
     
     lib.widget.Model = Model;
     
