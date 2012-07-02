@@ -15,11 +15,14 @@
         if (element) {
             this._element = element;
             this._eventName = "__bindableChange" + this.__guid;
-            this._events = {};
         }
     };
     
     lib.extend(Bindable.prototype, {
+        dispose: function dispose() {
+            this.unbind();
+        },
+        
         toString: function toString() {
             return "[object Bindable]";
         },
@@ -69,8 +72,7 @@
         },
         
         unbind: function unbind(target, property) {
-            var bound = this._bound,
-                test;
+            var bound = this._bound;
             
             for (var i in bound) {
                 var bTarget = bound[i].target,
@@ -92,9 +94,8 @@
     });
     
     function callAllBound(value, oldValue) {
-        var cb = lib.bind(callBound, this);
         for (var i in this._bound) {
-            cb(i, value, oldValue);
+            callBound.call(this, i, value, oldValue);
         }
     };
     
