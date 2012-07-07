@@ -5,8 +5,6 @@
         
         if (lib.dom.isTypeOf(element, lib.dom.ELEMENT_NODE | lib.dom.DOCUMENT_NODE) || element == lib.window) {
             this.element = element;
-            this.element.__widgets = {};
-            this.element.__widgets[lib.util.getType(this)] = this;
         }
     };
     
@@ -30,8 +28,8 @@
             var methodFunction;
             
             try {
-                methodFunction = widget.__bound[method];
-                return methodFunction.apply(widget, args);
+                methodFunction = this.__bound[method];
+                return methodFunction.apply(this, args);
             } catch (e) {
                 throw new Error("method " + method + " isn't bound");
             }
@@ -47,10 +45,15 @@
     
     lib.extend(WidgetFactory.prototype, {
         run: function run(elements, properties) {
-            var widget;
+            var widget, name;
             elements = lib.util.isArray(elements) ? lib.array.toArray(elements) : [elements];
             lib.array.forEach(elements, lib.bind(function(element) {
                 widget = new this.widgetConstructor(element, properties);
+                if (widget.element) {
+                    name = lib.util.getFunctionName(this.widgetConstructor);
+                    widget.element.__widgets = {};
+                    widget.element.__widgets[name] = widget;
+                }
                 this.items.push(widget);
                 this.length++;
             }, this));
