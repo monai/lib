@@ -50,9 +50,8 @@
             lib.array.forEach(elements, lib.bind(function(element) {
                 widget = new this.widgetConstructor(element, properties);
                 if (widget.element) {
-                    name = lib.util.getFunctionName(this.widgetConstructor);
                     widget.element.__widgets = {};
-                    widget.element.__widgets[name] = widget;
+                    widget.element.__widgets[this.name] = widget;
                 }
                 this.items.push(widget);
                 this.length++;
