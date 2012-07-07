@@ -1224,7 +1224,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 target.addEventListener(type, callback, false);
             } else if (this.ie) {
                 target.__events[type].handle = null;
-                target.__events[type].IECallbacks = {};
+                target.__events[type].IECallbacks = target.__events[type].IECallbacks || { keys: [], callbacks: []};
                 target.__events[type].hasAttribute = false;
                 target.__events[type].supported = typeof target["on" + _type] == "object"
                                                  || typeof target["on" + _type] == "function";
@@ -1241,7 +1241,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                         
                         return callback.apply(target, [event]);
                     }, this);
-                    target.__events[type].IECallbacks[callback._guid] = _callback;
+                    target.__events[type].IECallbacks.keys.push(callback.__guid);
+                    target.__events[type].IECallbacks.callbacks.push(_callback);
                     target.attachEvent("on" + type, _callback);
                 } else {
                     target.__events[type].handle = function(event) {
@@ -1299,9 +1300,18 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                     if (this.w3c) {
                         target.removeEventListener(type, callback, false);
                     } else if (this.ie && target.__events[type].supported) {
-                        var _callback = target.__events[type].IECallbacks[callback.__guid];
+                        var _callback,
+                            iec = target.__events[type].IECallbacks,
+                            guid = callback.__guid;
+                        for (var i = 0, len = iec.keys.length; i < len; i++) {
+                            if (iec.keys[i] == guid) {
+                                _callback = iec.callbacks[i];
+                                iec.keys.splice(i, 0);
+                                iec.callbacks.splice(i, 0);
+                                break;
+                            }
+                        }
                         target.detachEvent("on" + type, _callback);
-                        delete target.__events[type].IECallbacks[callback.__guid];
                     }
                     delete target.__events[type].callbacks[callback.__guid];
                 } else {
@@ -1857,8 +1867,6 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
         
         if (lib.dom.isTypeOf(element, lib.dom.ELEMENT_NODE | lib.dom.DOCUMENT_NODE) || element == lib.window) {
             this.element = element;
-            this.element.__widgets = {};
-            this.element.__widgets[lib.util.getType(this)] = this;
         }
     };
     
@@ -1882,8 +1890,8 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
             var methodFunction;
             
             try {
-                methodFunction = widget.__bound[method];
-                return methodFunction.apply(widget, args);
+                methodFunction = this.__bound[method];
+                return methodFunction.apply(this, args);
             } catch (e) {
                 throw new Error("method " + method + " isn't bound");
             }
@@ -1899,10 +1907,14 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
     
     lib.extend(WidgetFactory.prototype, {
         run: function run(elements, properties) {
-            var widget;
+            var widget, name;
             elements = lib.util.isArray(elements) ? lib.array.toArray(elements) : [elements];
             lib.array.forEach(elements, lib.bind(function(element) {
                 widget = new this.widgetConstructor(element, properties);
+                if (widget.element) {
+                    widget.element.__widgets = {};
+                    widget.element.__widgets[this.name] = widget;
+                }
                 this.items.push(widget);
                 this.length++;
             }, this));
@@ -1961,6 +1973,7 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
         
         create: function create(constructor, prototype) {
             lib.util.inherits(constructor, Widget);
+            lib.extend(constructor.prototype, lib.widget.helpers);
             lib.extend(constructor.prototype, prototype);
             return new WidgetFactory(constructor);
         },
