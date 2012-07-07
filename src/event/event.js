@@ -9,7 +9,7 @@
                 target.addEventListener(type, callback, false);
             } else if (this.ie) {
                 target.__events[type].handle = null;
-                target.__events[type].IECallbacks = {};
+                target.__events[type].IECallbacks = target.__events[type].IECallbacks || { keys: [], callbacks: []};
                 target.__events[type].hasAttribute = false;
                 target.__events[type].supported = typeof target["on" + _type] == "object"
                                                  || typeof target["on" + _type] == "function";
@@ -26,7 +26,8 @@
                         
                         return callback.apply(target, [event]);
                     }, this);
-                    target.__events[type].IECallbacks[callback._guid] = _callback;
+                    target.__events[type].IECallbacks.keys.push(callback.__guid);
+                    target.__events[type].IECallbacks.callbacks.push(_callback);
                     target.attachEvent("on" + type, _callback);
                 } else {
                     target.__events[type].handle = function(event) {
@@ -84,9 +85,18 @@
                     if (this.w3c) {
                         target.removeEventListener(type, callback, false);
                     } else if (this.ie && target.__events[type].supported) {
-                        var _callback = target.__events[type].IECallbacks[callback.__guid];
+                        var _callback,
+                            iec = target.__events[type].IECallbacks,
+                            guid = callback.__guid;
+                        for (var i = 0, len = iec.keys.length; i < len; i++) {
+                            if (iec.keys[i] == guid) {
+                                _callback = iec.callbacks[i];
+                                iec.keys.splice(i, 0);
+                                iec.callbacks.splice(i, 0);
+                                break;
+                            }
+                        }
                         target.detachEvent("on" + type, _callback);
-                        delete target.__events[type].IECallbacks[callback.__guid];
                     }
                     delete target.__events[type].callbacks[callback.__guid];
                 } else {
