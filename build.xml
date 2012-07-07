@@ -26,6 +26,7 @@
             <fileset file="src/browser/ie.js" />
             <fileset file="src/tween/tween.js" />
             <fileset file="src/widget/widget.js" />
+            <fileset file="src/widget/helpers.js" />
             <fileset file="src/widget/Model.js" />
         </concat>
         <replaceregexp match="@VERSION" replace="${version}" flags="g" byline="true" file="${dist}/${out}.out" />
