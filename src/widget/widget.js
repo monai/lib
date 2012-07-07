@@ -111,6 +111,7 @@
         
         create: function create(constructor, prototype) {
             lib.util.inherits(constructor, Widget);
+            lib.extend(constructor.prototype, lib.widget.helpers);
             lib.extend(constructor.prototype, prototype);
             return new WidgetFactory(constructor);
         },
