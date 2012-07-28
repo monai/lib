@@ -46,7 +46,13 @@
     lib.extend(WidgetFactory.prototype, {
         run: function run(elements, properties) {
             var widget, name;
-            elements = lib.util.isArray(elements) ? lib.array.toArray(elements) : [elements];
+            if (lib.dom.isTypeOf(elements, lib.dom.ELEMENT_NODE | lib.dom.DOCUMENT_NODE) || elements == lib.window) {
+                elements = [elements];
+            } else if (elements) {
+                elements = lib.array.toArray(elements);
+            } else {
+                elements = [];
+            }
             lib.array.forEach(elements, lib.bind(function(element) {
                 widget = new this.widgetConstructor(element, properties);
                 if (widget.element) {
