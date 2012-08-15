@@ -1,4 +1,15 @@
+/*
+Copyright (c) 2012 https://github.com/monai/
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
 (function(window, undefined) {
+    "use strict";
+    
     var log = function log() {
         if (window.console && window.console.log && window.console.log.apply) {
             window.console.log.apply(window.console, arguments);
@@ -17,7 +28,9 @@
     inspect = function inspect(object) {
         var o = [];
         for (var i in object) {
-            o.push(i + ": " + object[i]);
+            if (object.hasOwnProperty(i)) {
+                o.push(i + ": " + object[i]);
+            }
         }
         return o.join("\r\n");
     },
@@ -40,7 +53,7 @@
                 lib.isReady = true;
                 lib.event.dispatch(lib.document, "libReady");
                 lib.event.remove(lib.document, "libReady");
-            } else if (typeof callback == "function") {
+            } else if (typeof callback === "function") {
                 if (!lib.isReady && !dom) {
                     lib.event.add(lib.document, "libReady", lib.bind(callback, lib.window));
                 } else if (!lib.isDOMReady && dom) {
@@ -52,8 +65,13 @@
         },
         
         extend: function extend(target) {
-            for (var i, k = 0, len = arguments.length; ++k < len;)
-                for (i in arguments[k]) target[i] = arguments[k][i];
+            for (var i, k = 0, len = arguments.length; ++k < len;) {
+                for (i in arguments[k]) {
+                    if (arguments[k].hasOwnProperty(i)) {
+                        target[i] = arguments[k][i];
+                    }
+                }
+            }
             return target;
         },
         
@@ -68,8 +86,12 @@
         },
         
         guid: function guid(object) {
-            if (!object) return ++lib.guid.id;
-            if (!object.__guid) object.__guid = lib.guid.id++;
+            if (!object) {
+                return ++lib.guid.id;
+            }
+            if (!object.__guid) {
+                object.__guid = lib.guid.id++;
+            }
             return object.__guid;
         }
     };
@@ -77,11 +99,16 @@
     lib.log.output = [];
     lib.guid.id = 1;
     
-    if (!window.lib) window.lib = lib;
-    if (!window.log) window.log = log;
+    if (!window.lib) {
+        window.lib = lib;
+    }
+    if (!window.log) {
+        window.log = log;
+    }
 })(window);
-
 (function(lib, undefined) {
+    /*global lib*/
+    "use strict";
     
     lib.util = {
         getType: function getType(object) {
@@ -90,64 +117,66 @@
             if (object === null) {
                 return "null";
             } else if (object === undefined) {
-                return "undefined"
+                return "undefined";
             } else if (object === true || object === false) {
                 return "boolean";
-            } else if (string == "[object Array]") {
+            } else if (string === "[object Array]") {
                 return "Array";
-            } else if (string == "[object Arguments]" || !!(op.hasOwnProperty.call(object, "callee"))) {
+            } else if (string === "[object Arguments]" || !!(op.hasOwnProperty.call(object, "callee"))) {
                 return "Arguments";
-            } else if (string == "[object Function]") {
+            } else if (string === "[object Function]") {
                 return "Function";
-            } else if (string == "[object String]") {
+            } else if (string === "[object String]") {
                 return "String";
-            } else if (string == "[object Number]") {
+            } else if (string === "[object Number]") {
                 return "Number";
-            } else if (string == "[object Date]") {
+            } else if (string === "[object Date]") {
                 return "Date";
-            } else if (string == "[object RegExp]") {
+            } else if (string === "[object RegExp]") {
                 return "RegExp";
-            } else if (typeof object == "object") {
+            } else if (typeof object === "object") {
                 return this.getFunctionName(object.constructor);
             }
         },
         
         isObject: function isObject(object) {
-            return object === Object(object);
+            return object === new Object(object);
         },
         
         isArray: function isArray(object) {
-            return this.getType(object) == "Array";
+            return this.getType(object) === "Array";
         },
         
         isArguments: function isArguments(object) {
-            return this.getType(object) == "Arguments";
+            return this.getType(object) === "Arguments";
         },
         
         isFunction: function isFunction(object) {
-            return this.getType(object) == "Function";
+            return this.getType(object) === "Function";
         },
         
         isString: function isString(object) {
-            return this.getType(object) == "String";
+            return this.getType(object) === "String";
         },
         
         isNumber: function isNumber(object) {
-            return this.getType(object) == "Number";
+            return this.getType(object) === "Number";
         },
         
         isDate: function isDate(object) {
-            return this.getType(object) == "Date";
+            return this.getType(object) === "Date";
         },
         
         isRegExp: function isRegExp(object) {
-            return this.getType(object) == "RegExp";
+            return this.getType(object) === "RegExp";
         },
         
         getFunctionName: function getFunctionName(func) {
             if (this.isFunction(func)) {
                 var name = func.toString();
-                if (/^function (\S+?)\(/.test(name)) return RegExp.$1;
+                if (/^function (\S+?)\(/.test(name)) {
+                    return RegExp.$1;
+                }
             } else {
                 return null;
             }
@@ -166,23 +195,30 @@
                     }
                 });
             } else {
-                function f() {};
-                f.prototype = superConstructor.prototype;
-                constructor.prototype = new f;
+                F.prototype = superConstructor.prototype;
+                constructor.prototype = new F();
             }
         }
     };
+    
+    function F() {}
 })(lib);
-
 (function(lib, undefined) {
+    /*global lib*/
+    "use strict";
+    
     function Benchmark(name, start) {
-        if (this == lib.util) return new Benchmark(name, start);
+        if (this === lib.util) {
+            return new Benchmark(name, start);
+        }
         
         this.name = name;
         this.startTime = null;
         this.endTime = null;
-        if (start || typeof start == "undefined") this.start();
-    };
+        if (start || typeof start === "undefined") {
+            this.start();
+        }
+    }
     
     lib.extend(Benchmark.prototype, {
         start: function start() {
@@ -203,15 +239,19 @@
     lib.util.Benchmark = Benchmark;
     
 })(lib);
-
 (function(lib, undefined) {
+    /*global lib*/
+    "use strict";
+    
     function Bindable(value, element) {
-        if (this == lib.util) return new Bindable(value, element);
+        if (this === lib.util) {
+            return new Bindable(value, element);
+        }
         
         this.__guid = lib.guid();
         this._bound = {};
         
-        if (arguments.length == 1 && lib.dom.isTypeOf(element, lib.dom.ELEMENT_NODE)) {
+        if (arguments.length === 1 && lib.dom.isTypeOf(element, lib.dom.ELEMENT_NODE)) {
             element = value;
             value = undefined;
         }
@@ -222,7 +262,7 @@
             this._element = element;
             this._eventName = "__bindableChange" + this.__guid;
         }
-    };
+    }
     
     lib.extend(Bindable.prototype, {
         dispose: function dispose() {
@@ -262,7 +302,7 @@
                     proxy: null
                 };
             
-            if (target && typeof property == "string") {
+            if (target && typeof property === "string") {
                 bound.target = [target, property];
             } else if (lib.util.isFunction(target)) {
                 bound.target = target;
@@ -281,52 +321,67 @@
             var bound = this._bound;
             
             for (var i in bound) {
-                var bTarget = bound[i].target,
-                    specificTarget = (bTarget === target
-                                      || lib.util.isArray(bTarget)
-                                         && bTarget[0] === target
-                                         && bTarget[1] === property);
-                
-                if (specificTarget || !target) {
-                    if (this._element) {
-                        lib.event.remove(this._element, this._eventName, this._bound[i].proxy);
+                if (bound.hasOwnProperty(i)) {
+                    var bTarget = bound[i].target,
+                        specificTarget = (bTarget === target ||
+                                          lib.util.isArray(bTarget) &&
+                                          bTarget[0] === target &&
+                                          bTarget[1] === property);
+                    
+                    if (specificTarget || !target) {
+                        if (this._element) {
+                            lib.event.remove(this._element, this._eventName, this._bound[i].proxy);
+                        }
+                        delete bound[i];
                     }
-                    delete bound[i];
+                    
+                    if (specificTarget) {
+                        break;
+                    }
                 }
-                
-                if (specificTarget) break;
             }
         }
     });
     
     function callAllBound(value, oldValue) {
+        /*jshint validthis:true */
         for (var i in this._bound) {
-            callBound.call(this, i, value, oldValue);
+            if (this._bound.hasOwnProperty(i)) {
+                callBound.call(this, i, value, oldValue);
+            }
         }
-    };
+    }
     
     function callBound(id, value, oldValue) {
+        /*jshint validthis:true */
         var bound = this._bound[id];
         if (lib.util.isArray(bound.target)) {
             bound.target[0][bound.target[1]] = value;
         } else {
             bound.target.call(this, value, oldValue);
         }
-    };
+    }
     
     lib.util.Bindable = Bindable;
     
 })(lib);
-
 (function(lib, undefined) {
+    /*global lib*/
+    "use strict";
+    
     lib.object = {
         keys: function keys(object) {
+            var ks;
             if ("keys" in Object) {
                 return Object.keys(object);
             } else {
-                var keys = [];
-                for (var i in object) keys.push(i);
-                return keys;
+                ks = [];
+                for (var i in object) {
+                    if (object.hasOwnProperty(i)) {
+                        ks.push(i);
+                    }
+                }
+                return ks;
             }
         },
         
@@ -335,8 +390,12 @@
             var path = template.split(".");
             
             (function iterate(parent, path) {
-                if (!parent[path[0]]) parent[path[0]] = {};
-                if (path.length > 1) iterate(parent[path[0]], path.splice(1));
+                if (!parent[path[0]]) {
+                    parent[path[0]] = {};
+                }
+                if (path.length > 1) {
+                    iterate(parent[path[0]], path.splice(1));
+                }
             })(object, path);
             
             return object;
@@ -345,7 +404,7 @@
         subtract: function subtract(minuend, subtrahend) {
             var difference = {};
             for (var i in minuend) {
-                if (typeof subtrahend[i] == "undefined") {
+                if (typeof subtrahend[i] === "undefined") {
                     difference[i] = minuend[i];
                 }
             }
@@ -353,35 +412,41 @@
         }
     };
 })(lib);
-
 (function(lib, undefined) {
+    /*global lib*/
+    "use strict";
+    
     lib.array = {
         toArray: function toArray(object) {
             var array = [];
             try {
                 array = Array.prototype.slice.call(object, 0);
             } catch (e) {
-                for (var i = 0, len = object.length; i < len; i++) array[i] = object[i];
+                for (var i = 0, len = object.length; i < len; i++) {
+                    array[i] = object[i];
+                }
             }
             return array;
         },
         
         indexOf: function indexOf(array, object) {
             for (var i = 0, len = array.length; i < len; i++) {
-                var found = lib.util.isArray(object)
-                            ? this.isEqual(array[i], object)
-                            : array[i] === object;
-                if (found) return i;
+                var found = lib.util.isArray(object) ?
+                            this.isEqual(array[i], object) : array[i] === object;
+                if (found) {
+                    return i;
+                }
             }
             return -1;
         },
         
         lastIndexOf: function lastIndexOf(array, object) {
             for (var len = array.length, i = len - 1; i >= 0; i--) {
-                var found = lib.util.isArray(object)
-                            ? this.isEqual(array[i], object)
-                            : array[i] === object;
-                if (found) return i;
+                var found = lib.util.isArray(object) ?
+                            this.isEqual(array[i], object) : array[i] === object;
+                if (found) {
+                    return i;
+                }
             }
             return -1;
         },
@@ -391,7 +456,9 @@
         },
         
         forEach: function forEach(array, callback, thisObject) {
-            if (typeof callback != "function") throw new TypeError(callback + " is not a function");
+            if (typeof callback !== "function") {
+                throw new TypeError(callback + " is not a function");
+            }
             
             if ("forEach" in array) {
                 array.forEach(callback, thisObject || lib.window);
@@ -403,33 +470,43 @@
         },
         
         every: function every(array, callback, thisObject) {
-            if (typeof callback != "function") throw new TypeError(callback + " is not a function");
+            if (typeof callback !== "function") {
+                throw new TypeError(callback + " is not a function");
+            }
             
             if ("every" in array) {
                 return array.every(callback, thisObject || lib.window);
             } else {
                 for (var i = 0, len = array.length; i < len; i++) {
-                    if (i in array && !callback.call(thisObject || lib.window, array[i], i, array)) return false;
+                    if (i in array && !callback.call(thisObject || lib.window, array[i], i, array)) {
+                        return false;
+                    }
                 }
                 return true;
             }
         },
         
         some: function some(array, callback, thisObject) {
-            if (typeof callback != "function") throw new TypeError(callback + " is not a function");
+            if (typeof callback !== "function") {
+                throw new TypeError(callback + " is not a function");
+            }
             
             if ("some" in array) {
                 return array.some(callback, thisObject || lib.window);
             } else {
                 for (var i = 0, len = array.length; i < len; i++) {
-                    if (i in array && callback.call(thisObject || lib.window, array[i], i, array)) return true;
+                    if (i in array && callback.call(thisObject || lib.window, array[i], i, array)) {
+                        return true;
+                    }
                 }
                 return false;
             }
         },
         
         filter: function filter(array, callback, thisObject) {
-            if (typeof callback != "function") throw new TypeError(callback + " is not a function");
+            if (typeof callback !== "function") {
+                throw new TypeError(callback + " is not a function");
+            }
             
             if ("filter" in array) {
                 return array.filter(callback, thisObject || lib.window);
@@ -437,7 +514,9 @@
                 var out = [];
                 for (var i = 0, len = array.length; i < len; i++) {
                     if (i in array) {
-                        if (callback.call(thisObject || lib.window, array[i], i, array)) out.push(array[i]);
+                        if (callback.call(thisObject || lib.window, array[i], i, array)) {
+                            out.push(array[i]);
+                        }
                     }
                 }
                 return out;
@@ -445,7 +524,9 @@
         },
         
         map: function map(array, callback, thisObject) {
-            if (typeof callback != "function") throw new TypeError(callback + " is not a function");
+            if (typeof callback !== "function") {
+                throw new TypeError(callback + " is not a function");
+            }
             
             if ("map" in array) {
                 return array.map(callback, thisObject || lib.window);
@@ -453,23 +534,27 @@
                 var len = array.length,
                     out = new Array(len);
                 for (var i = 0; i < len; i++) {
-                    if (i in array) out[i] = callback.call(thisObject || lib.window, array[i], i, array);
+                    if (i in array) {
+                        out[i] = callback.call(thisObject || lib.window, array[i], i, array);
+                    }
                 }
                 return out;
             }
         },
         
         reduce: function reduce(array, callback, initialValue) {
-            if (typeof callback != "function") throw new TypeError(callback + " is not a function");
+            if (typeof callback !== "function") {
+                throw new TypeError(callback + " is not a function");
+            }
             
             if ("reduce" in array) {
                 var args = initialValue ? [callback, initialValue] : [callback];
                 return Array.prototype.reduce.apply(array, args);
             } else {
                 var len = array.length,
-                    isUndefined = typeof initialValue == "undefined";
+                    isUndefined = typeof initialValue === "undefined";
                 
-                if (len == 0 && isUndefined) {
+                if (0 === len && isUndefined) {
                     throw new TypeError("Reduce of empty array with no initial value");
                 }
                 
@@ -477,23 +562,27 @@
                     out = (isUndefined) ? initialValue : array[i++];
                 
                 for (; i < len; i++) {
-                    if (i in array) out = callback.call(lib.window, out, array[i], i, array);
+                    if (i in array) {
+                        out = callback.call(lib.window, out, array[i], i, array);
+                    }
                 }
                 return out;
             }
         },
         
         reduceRight: function reduceRight(array, callback, initialValue) {
-            if (typeof callback != "function") throw new TypeError(callback + " is not a function");
+            if (typeof callback !== "function") {
+                throw new TypeError(callback + " is not a function");
+            }
             
             if ("reduceRight" in array) {
                 var args = initialValue ? [callback, initialValue] : [callback];
                 return Array.prototype.reduceRight.apply(array, args);
             } else {
                 var len = array.length,
-                    isUndefined = typeof initialValue == "undefined";
+                    isUndefined = (typeof initialValue === "undefined");
                 
-                if (len == 0 && isUndefined) {
+                if (0 === len && isUndefined) {
                     throw new TypeError("Reduce of empty array with no initial value");
                 }
                 
@@ -501,7 +590,9 @@
                     out = (isUndefined) ? initialValue : array[i--];
                 
                 for (; i >= 0; i--) {
-                    if (i in array) out = callback.call(lib.window, out, array[i], i, array);
+                    if (i in array) {
+                        out = callback.call(lib.window, out, array[i], i, array);
+                    }
                 }
                 return out;
             }
@@ -511,21 +602,29 @@
             var out = true,
                 len = array.length;
             for (var i = 1, argsLen = arguments.length; i < argsLen; i++) {
-                if (len != arguments[i].length) return false;
+                if (len !== arguments[i].length) {
+                    return false;
+                }
                 for (var j = 0; j < len; j++) {
                     if (array[j] instanceof Array || arguments[i][j] instanceof Array) {
                         if (array[j] instanceof Array && arguments[i][j] instanceof Array) {
                             out = this.isEqual(array[j], arguments[i][j]);
-                            if (!out) break;
+                            if (!out) {
+                                break;
+                            }
                         } else {
                             return false;
                         }
                     } else {
-                        out = (array[j] == arguments[i][j]);
-                        if (!out) break;
+                        out = (array[j] === arguments[i][j]);
+                        if (!out) {
+                            break;
+                        }
                     }
                 }
-                if (!out) break;
+                if (!out) {
+                    break;
+                }
             }
             return out;
         },
@@ -538,7 +637,9 @@
         
         unique: function unique(array) {
             return lib.array.reduce(array, lib.bind(function(prev, curr) {
-                if (!this.inArray(prev, curr)) prev.push(curr);
+                if (!this.inArray(prev, curr)) {
+                    prev.push(curr);
+                }
                 return prev;
             },this), []);
         },
@@ -564,10 +665,14 @@
         }
     };
 })(lib);
-
 (function(lib, undefined) {
+    /*global lib*/
+    "use strict";
+    
     lib.string = {
         trim: function trim(str) {
+            /*jshint curly:false*/
+            
             if ("trim" in String) {
                 return String.trim(str);
             } else {
@@ -587,6 +692,8 @@
         },
         
         trimRight: function trimRight(str) {
+            /*jshint curly:false*/
+            
             if ("trimRight" in String) {
                 return String.trimRight(str);
             } else {
@@ -597,15 +704,21 @@
         },
         
         padding: function padding(str, pad, length) {
-            if (typeof str != "string") str = str.toString();
+            if (typeof str !== "string") {
+                str = str.toString();
+            }
             
             var absLength = Math.abs(length);
-            if (str.length >= absLength) return str;
+            if (str.length >= absLength) {
+                return str;
+            }
             
-            var prepend = (absLength == length) ? true : false,
+            var prepend = (absLength === length) ? true : false,
                 out = new Array(absLength - str.length);
             
-            for (var i = 0, len = out.length; i < len; i++) out[i] = pad;
+            for (var i = 0, len = out.length; i < len; i++) {
+                out[i] = pad;
+            }
             
             if (prepend) {
                 out.push(str);
@@ -616,8 +729,9 @@
         },
         
         format: function format(str, args) {
+            /*jshint unused:false*/
             return str.replace(/\{(\d+)\}/g, function(s, n) {
-                return args[parseInt(n)];
+                return args[parseInt(n, 10)];
             });
         },
         
@@ -630,18 +744,22 @@
         }
     };
 })(lib);
-
 (function(lib, undefined) {
+    /*global lib*/
+    "use strict";
+    
     lib.date = {
         parseISOString: function parseISOString(str) {
             var parsed = Date.parse(str);
-            if (!isNaN(parsed)) return new Date(parsed);
+            if (!isNaN(parsed)) {
+                return new Date(parsed);
+            }
             
             var match = str.match(/\d+/g),
                 date = new Date(match[0], parseInt(match[1], 10) - 1, match[2], match[3], match[4], match[5], match[6]),
                 offset = (new Date()).getTimezoneOffset(),
                 offsetAbs = Math.abs(offset),
-                offsetSign = (offsetAbs == offset) ? -1 : 1,
+                offsetSign = (offsetAbs === offset) ? -1 : 1,
                 offsetHours = (offsetAbs - (offsetAbs % 60)) / 60,
                 offsetMinutes = offsetAbs - offsetHours * 60;
             date.setHours(date.getHours() + offsetHours * offsetSign);
@@ -650,126 +768,792 @@
         },
         
         toISOString: function toISOString(date) {
+            /*jshint laxcomma:true*/
             if ("toISOString" in date) {
                 return date.toISOString();
             } else {
-                return date.getUTCFullYear() + "-"
-                     + lib.util.padding(date.getUTCMonth() + 1, 0, 2) + "-"
-                     + lib.util.padding(date.getUTCDate(), 0, 2) + "T"
-                     + lib.util.padding(date.getUTCHours(), 0, 2) + ":"
-                     + lib.util.padding(date.getUTCMinutes(), 0, 2) + ":"
-                     + lib.util.padding(date.getUTCSeconds(), 0, 2) + "."
-                     + lib.util.padding(date.getUTCMilliseconds(), 0, 3) + "Z";
+                return [date.getUTCFullYear(), "-"
+                      , lib.util.padding(date.getUTCMonth() + 1, 0, 2), "-"
+                      , lib.util.padding(date.getUTCDate(), 0, 2), "T"
+                      , lib.util.padding(date.getUTCHours(), 0, 2), ":"
+                      , lib.util.padding(date.getUTCMinutes(), 0, 2), ":"
+                      , lib.util.padding(date.getUTCSeconds(), 0, 2), "."
+                      , lib.util.padding(date.getUTCMilliseconds(), 0, 3), "Z"].join("");
             }
         }
     };
 })(lib);
+/*! JSON v3.2.3 | http://bestiejs.github.com/json3 | Copyright 2012, Kit Cambridge | http://kit.mit-license.org */
+(function () {
+  // Convenience aliases.
+  var getClass = {}.toString, isProperty, forEach, undef;
 
-(function(lib, undefined) {
-    lib.JSON = {
-        parse: function parse(str) {
-            if (lib.window.JSON && "parse" in lib.window.JSON) {
-                return lib.window.JSON.parse(str);
-            } else {
-                if (typeof str != "string" && typeof str != "undefined") return str;
-                
-                var canEval = (/^[\],:{}\s]*$/.test(
-                    str.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g, "@")
-                    .replace(/\"[^\"\\\n\r]*\"|true|false|null|-?\d+(?:\.\d*)?(:?[eE][+\-]?\d+)?/g, "]")
-                    .replace(/(?:^|:|,)(?:\s*\[)+/g, "")
-                ));
-                if (canEval) {
-                    return (new Function("return (" + str + ")"))();
-                } else {
-                    throw new SyntaxError("Invalid JSON");
-                }
-            }
-        },
-        
-        stringify: function stringify(object) {
-            var type;
-            
-            if (lib.window.JSON && "stringify" in lib.window.JSON) {
-                return lib.window.JSON.stringify(object);
-            } else {
-                type = lib.util.getType(object);
-                
-                if (type == "Object" || type == "Array") {
-                    return stringify(object);
-                } else {
-                    throw new TypeError("Cannot stringify function to JSON");
-                }
-                
-                function stringify(object) {
-                    var key, type, serial, len, dataType, notFirst;
-                    
-                    if (lib.util.getType(object) == "array") {
-                        type = {
-                            start : "[",
-                            end : "]",
-                            showKeys : false
-                        };
-                    } else {
-                        type = {
-                            start : "{",
-                            end : "}",
-                            showKeys : true
-                        };
-                    }
-                    
-                    serial = [type.start];
-                    len = 1;
-                    notFirst = false;
-                    
-                    for (key in object) {
-                        dataType = lib.util.getType(object[key]);
-                        
-                        if (dataType != "undefined") {
-                            if (notFirst) {
-                                serial[len++] = ",";
-                            }
-                            notFirst = true;
-                            
-                            if (type.showKeys) {
-                                serial[len++] = "\"";
-                                serial[len++] = key;
-                                serial[len++] = "\"";
-                                serial[len++] = ":";
-                            }
-                            
-                            switch (dataType) {
-                                case "Function":
-                                    throw new TypeError("Cannot stringify function to JSON");
-                                    break;
-                                case "String":
-                                default:
-                                    serial[len++] = "\"";
-                                    serial[len++] = object[key];
-                                    serial[len++] = "\"";
-                                    break;
-                                case "Number":
-                                case "Boolean":
-                                    serial[len++] = object[key];
-                                    break;
-                                case "Object":
-                                case "Array":
-                                    serial[len++] = stringify(object[key]);
-                                    break;
-                                case "null":
-                                    serial[len++] = "null";
-                                    break;
-                            }
-                        }
-                    }
-                    serial[len++] = type.end;
-                    return serial.join("");
-                }
-            }
-        }
+  // Detect the `define` function exposed by asynchronous module loaders and set
+  // up the internal `JSON3` namespace. The strict equality check for `define`
+  // is necessary for compatibility with the RequireJS optimizer (`r.js`).
+  var isLoader = typeof define === "function" && define.amd, JSON3 = typeof exports == "object" && exports;
+
+  // A JSON source string used to test the native `stringify` and `parse`
+  // implementations.
+  var serialized = '{"A":[1,true,false,null,"\\u0000\\b\\n\\f\\r\\t"]}';
+
+  // Feature tests to determine whether the native `JSON.stringify` and `parse`
+  // implementations are spec-compliant. Based on work by Ken Snyder.
+  var stringifySupported, Escapes, toPaddedString, quote, serialize;
+  var parseSupported, fromCharCode, Unescapes, abort, lex, get, walk, update, Index, Source;
+
+  // Test the `Date#getUTC*` methods. Based on work by @Yaffle.
+  var value = new Date(-3509827334573292), floor, Months, getDay;
+
+  try {
+    // The `getUTCFullYear`, `Month`, and `Date` methods return nonsensical
+    // results for certain dates in Opera >= 10.53.
+    value = value.getUTCFullYear() == -109252 && value.getUTCMonth() === 0 && value.getUTCDate() == 1 &&
+      // Safari < 2.0.2 stores the internal millisecond time value correctly,
+      // but clips the values returned by the date methods to the range of
+      // signed 32-bit integers ([-2 ** 31, 2 ** 31 - 1]).
+      value.getUTCHours() == 10 && value.getUTCMinutes() == 37 && value.getUTCSeconds() == 6 && value.getUTCMilliseconds() == 708;
+  } catch (exception) {}
+
+  // Define additional utility methods if the `Date` methods are buggy.
+  if (!value) {
+    floor = Math.floor;
+    // A mapping between the months of the year and the number of days between
+    // January 1st and the first of the respective month.
+    Months = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+    // Internal: Calculates the number of days between the Unix epoch and the
+    // first day of the given month.
+    getDay = function (year, month) {
+      return Months[month] + 365 * (year - 1970) + floor((year - 1969 + (month = +(month > 1))) / 4) - floor((year - 1901 + month) / 100) + floor((year - 1601 + month) / 400);
     };
-})(lib);
+  }
 
+  // Export JSON 3 for asynchronous module loaders, CommonJS environments, web
+  // browsers, and JavaScript engines. Credits: Oyvind Sean Kinsey.
+  if (isLoader || JSON3) {
+    if (isLoader) {
+      // Export for asynchronous module loaders. The `JSON3` namespace is
+      // redefined because module loaders do not provide the `exports` object.
+      define("json", (JSON3 = {}));
+    }
+    if (typeof JSON == "object" && JSON) {
+      // Delegate to the native `stringify` and `parse` implementations in
+      // asynchronous module loaders and CommonJS environments.
+      JSON3.stringify = JSON.stringify;
+      JSON3.parse = JSON.parse;
+    }
+  } else {
+    // Export for browsers and JavaScript engines.
+    JSON3 = this.JSON || (this.JSON = {});
+  }
+
+  // Test `JSON.stringify`.
+  if ((stringifySupported = typeof JSON3.stringify == "function" && !getDay)) {
+    // A test function object with a custom `toJSON` method.
+    (value = function () {
+      return 1;
+    }).toJSON = value;
+    try {
+      stringifySupported =
+        // Firefox 3.1b1 and b2 serialize string, number, and boolean
+        // primitives as object literals.
+        JSON3.stringify(0) === "0" &&
+        // FF 3.1b1, b2, and JSON 2 serialize wrapped primitives as object
+        // literals.
+        JSON3.stringify(new Number()) === "0" &&
+        JSON3.stringify(new String()) == '""' &&
+        // FF 3.1b1, 2 throw an error if the value is `null`, `undefined`, or
+        // does not define a canonical JSON representation (this applies to
+        // objects with `toJSON` properties as well, *unless* they are nested
+        // within an object or array).
+        JSON3.stringify(getClass) === undef &&
+        // IE 8 serializes `undefined` as `"undefined"`. Safari 5.1.2 and FF
+        // 3.1b3 pass this test.
+        JSON3.stringify(undef) === undef &&
+        // Safari 5.1.2 and FF 3.1b3 throw `Error`s and `TypeError`s,
+        // respectively, if the value is omitted entirely.
+        JSON3.stringify() === undef &&
+        // FF 3.1b1, 2 throw an error if the given value is not a number,
+        // string, array, object, Boolean, or `null` literal. This applies to
+        // objects with custom `toJSON` methods as well, unless they are nested
+        // inside object or array literals. YUI 3.0.0b1 ignores custom `toJSON`
+        // methods entirely.
+        JSON3.stringify(value) === "1" &&
+        JSON3.stringify([value]) == "[1]" &&
+        // Prototype <= 1.6.1 serializes `[undefined]` as `"[]"` instead of
+        // `"[null]"`.
+        JSON3.stringify([undef]) == "[null]" &&
+        // YUI 3.0.0b1 fails to serialize `null` literals.
+        JSON3.stringify(null) == "null" &&
+        // FF 3.1b1, 2 halts serialization if an array contains a function:
+        // `[1, true, getClass, 1]` serializes as "[1,true,],". These versions
+        // of Firefox also allow trailing commas in JSON objects and arrays.
+        // FF 3.1b3 elides non-JSON values from objects and arrays, unless they
+        // define custom `toJSON` methods.
+        JSON3.stringify([undef, getClass, null]) == "[null,null,null]" &&
+        // Simple serialization test. FF 3.1b1 uses Unicode escape sequences
+        // where character escape codes are expected (e.g., `\b` => `\u0008`).
+        JSON3.stringify({ "result": [value, true, false, null, "\0\b\n\f\r\t"] }) == serialized &&
+        // FF 3.1b1 and b2 ignore the `filter` and `width` arguments.
+        JSON3.stringify(null, value) === "1" &&
+        JSON3.stringify([1, 2], null, 1) == "[\n 1,\n 2\n]" &&
+        // JSON 2, Prototype <= 1.7, and older WebKit builds incorrectly
+        // serialize extended years.
+        JSON3.stringify(new Date(-8.64e15)) == '"-271821-04-20T00:00:00.000Z"' &&
+        // The milliseconds are optional in ES 5, but required in 5.1.
+        JSON3.stringify(new Date(8.64e15)) == '"+275760-09-13T00:00:00.000Z"' &&
+        // Firefox <= 11.0 incorrectly serializes years prior to 0 as negative
+        // four-digit years instead of six-digit years. Credits: @Yaffle.
+        JSON3.stringify(new Date(-621987552e5)) == '"-000001-01-01T00:00:00.000Z"' &&
+        // Safari <= 5.1.5 and Opera >= 10.53 incorrectly serialize millisecond
+        // values less than 1000. Credits: @Yaffle.
+        JSON3.stringify(new Date(-1)) == '"1969-12-31T23:59:59.999Z"';
+    } catch (exception) {
+      stringifySupported = false;
+    }
+  }
+
+  // Test `JSON.parse`.
+  if (typeof JSON3.parse == "function") {
+    try {
+      // FF 3.1b1, b2 will throw an exception if a bare literal is provided.
+      // Conforming implementations should also coerce the initial argument to
+      // a string prior to parsing.
+      if (JSON3.parse("0") === 0 && !JSON3.parse(false)) {
+        // Simple parsing test.
+        value = JSON3.parse(serialized);
+        if ((parseSupported = value.A.length == 5 && value.A[0] == 1)) {
+          try {
+            // Safari <= 5.1.2 and FF 3.1b1 allow unescaped tabs in strings.
+            parseSupported = !JSON3.parse('"\t"');
+          } catch (exception) {}
+          if (parseSupported) {
+            try {
+              // FF 4.0 and 4.0.1 allow leading `+` signs, and leading and
+              // trailing decimal points. FF 4.0, 4.0.1, and IE 9 also allow
+              // certain octal literals.
+              parseSupported = JSON3.parse("01") != 1;
+            } catch (exception) {}
+          }
+        }
+      }
+    } catch (exception) {
+      parseSupported = false;
+    }
+  }
+
+  // Clean up the variables used for the feature tests.
+  value = serialized = null;
+
+  if (!stringifySupported || !parseSupported) {
+    // Internal: Determines if a property is a direct property of the given
+    // object. Delegates to the native `Object#hasOwnProperty` method.
+    if (!(isProperty = {}.hasOwnProperty)) {
+      isProperty = function (property) {
+        var members = {}, constructor;
+        if ((members.__proto__ = null, members.__proto__ = {
+          // The *proto* property cannot be set multiple times in recent
+          // versions of Firefox and SeaMonkey.
+          "toString": 1
+        }, members).toString != getClass) {
+          // Safari <= 2.0.3 doesn't implement `Object#hasOwnProperty`, but
+          // supports the mutable *proto* property.
+          isProperty = function (property) {
+            // Capture and break the object's prototype chain (see section 8.6.2
+            // of the ES 5.1 spec). The parenthesized expression prevents an
+            // unsafe transformation by the Closure Compiler.
+            var original = this.__proto__, result = property in (this.__proto__ = null, this);
+            // Restore the original prototype chain.
+            this.__proto__ = original;
+            return result;
+          };
+        } else {
+          // Capture a reference to the top-level `Object` constructor.
+          constructor = members.constructor;
+          // Use the `constructor` property to simulate `Object#hasOwnProperty` in
+          // other environments.
+          isProperty = function (property) {
+            var parent = (this.constructor || constructor).prototype;
+            return property in this && !(property in parent && this[property] === parent[property]);
+          };
+        }
+        members = null;
+        return isProperty.call(this, property);
+      };
+    }
+
+    // Internal: Normalizes the `for...in` iteration algorithm across
+    // environments. Each enumerated key is yielded to a `callback` function.
+    forEach = function (object, callback) {
+      var size = 0, Properties, members, property, forEach;
+
+      // Tests for bugs in the current environment's `for...in` algorithm. The
+      // `valueOf` property inherits the non-enumerable flag from
+      // `Object.prototype` in older versions of IE, Netscape, and Mozilla.
+      (Properties = function () {
+        this.valueOf = 0;
+      }).prototype.valueOf = 0;
+
+      // Iterate over a new instance of the `Properties` class.
+      members = new Properties();
+      for (property in members) {
+        // Ignore all properties inherited from `Object.prototype`.
+        if (isProperty.call(members, property)) {
+          size++;
+        }
+      }
+      Properties = members = null;
+
+      // Normalize the iteration algorithm.
+      if (!size) {
+        // A list of non-enumerable properties inherited from `Object.prototype`.
+        members = ["valueOf", "toString", "toLocaleString", "propertyIsEnumerable", "isPrototypeOf", "hasOwnProperty", "constructor"];
+        // IE <= 8, Mozilla 1.0, and Netscape 6.2 ignore shadowed non-enumerable
+        // properties.
+        forEach = function (object, callback) {
+          var isFunction = getClass.call(object) == "[object Function]", property, length;
+          for (property in object) {
+            // Gecko <= 1.0 enumerates the `prototype` property of functions under
+            // certain conditions; IE does not.
+            if (!(isFunction && property == "prototype") && isProperty.call(object, property)) {
+              callback(property);
+            }
+          }
+          // Manually invoke the callback for each non-enumerable property.
+          for (length = members.length; property = members[--length]; isProperty.call(object, property) && callback(property));
+        };
+      } else if (size == 2) {
+        // Safari <= 2.0.4 enumerates shadowed properties twice.
+        forEach = function (object, callback) {
+          // Create a set of iterated properties.
+          var members = {}, isFunction = getClass.call(object) == "[object Function]", property;
+          for (property in object) {
+            // Store each property name to prevent double enumeration. The
+            // `prototype` property of functions is not enumerated due to cross-
+            // environment inconsistencies.
+            if (!(isFunction && property == "prototype") && !isProperty.call(members, property) && (members[property] = 1) && isProperty.call(object, property)) {
+              callback(property);
+            }
+          }
+        };
+      } else {
+        // No bugs detected; use the standard `for...in` algorithm.
+        forEach = function (object, callback) {
+          var isFunction = getClass.call(object) == "[object Function]", property, isConstructor;
+          for (property in object) {
+            if (!(isFunction && property == "prototype") && isProperty.call(object, property) && !(isConstructor = property === "constructor")) {
+              callback(property);
+            }
+          }
+          // Manually invoke the callback for the `constructor` property due to
+          // cross-environment inconsistencies.
+          if (isConstructor || isProperty.call(object, (property = "constructor"))) {
+            callback(property);
+          }
+        };
+      }
+      return forEach(object, callback);
+    };
+
+    // Public: Serializes a JavaScript `value` as a JSON string. The optional
+    // `filter` argument may specify either a function that alters how object and
+    // array members are serialized, or an array of strings and numbers that
+    // indicates which properties should be serialized. The optional `width`
+    // argument may be either a string or number that specifies the indentation
+    // level of the output.
+    if (!stringifySupported) {
+      // Internal: A map of control characters and their escaped equivalents.
+      Escapes = {
+        "\\": "\\\\",
+        '"': '\\"',
+        "\b": "\\b",
+        "\f": "\\f",
+        "\n": "\\n",
+        "\r": "\\r",
+        "\t": "\\t"
+      };
+
+      // Internal: Converts `value` into a zero-padded string such that its
+      // length is at least equal to `width`. The `width` must be <= 6.
+      toPaddedString = function (width, value) {
+        // The `|| 0` expression is necessary to work around a bug in
+        // Opera <= 7.54u2 where `0 == -0`, but `String(-0) !== "0"`.
+        return ("000000" + (value || 0)).slice(-width);
+      };
+
+      // Internal: Double-quotes a string `value`, replacing all ASCII control
+      // characters (characters with code unit values between 0 and 31) with
+      // their escaped equivalents. This is an implementation of the
+      // `Quote(value)` operation defined in ES 5.1 section 15.12.3.
+      quote = function (value) {
+        var result = '"', index = 0, symbol;
+        for (; symbol = value.charAt(index); index++) {
+          // Escape the reverse solidus, double quote, backspace, form feed, line
+          // feed, carriage return, and tab characters.
+          result += '\\"\b\f\n\r\t'.indexOf(symbol) > -1 ? Escapes[symbol] :
+            // If the character is a control character, append its Unicode escape
+            // sequence; otherwise, append the character as-is.
+            symbol < " " ? "\\u00" + toPaddedString(2, symbol.charCodeAt(0).toString(16)) : symbol;
+        }
+        return result + '"';
+      };
+
+      // Internal: Recursively serializes an object. Implements the
+      // `Str(key, holder)`, `JO(value)`, and `JA(value)` operations.
+      serialize = function (property, object, callback, properties, whitespace, indentation, stack) {
+        var value = object[property], className, year, month, date, time, hours, minutes, seconds, milliseconds, results, element, index, length, prefix, any;
+        if (typeof value == "object" && value) {
+          className = getClass.call(value);
+          if (className == "[object Date]" && !isProperty.call(value, "toJSON")) {
+            if (value > -1 / 0 && value < 1 / 0) {
+              // Dates are serialized according to the `Date#toJSON` method
+              // specified in ES 5.1 section 15.9.5.44. See section 15.9.1.15
+              // for the ISO 8601 date time string format.
+              if (getDay) {
+                // Manually compute the year, month, date, hours, minutes,
+                // seconds, and milliseconds if the `getUTC*` methods are
+                // buggy. Adapted from @Yaffle's `date-shim` project.
+                date = floor(value / 864e5);
+                for (year = floor(date / 365.2425) + 1970 - 1; getDay(year + 1, 0) <= date; year++);
+                for (month = floor((date - getDay(year, 0)) / 30.42); getDay(year, month + 1) <= date; month++);
+                date = 1 + date - getDay(year, month);
+                // The `time` value specifies the time within the day (see ES
+                // 5.1 section 15.9.1.2). The formula `(A % B + B) % B` is used
+                // to compute `A modulo B`, as the `%` operator does not
+                // correspond to the `modulo` operation for negative numbers.
+                time = (value % 864e5 + 864e5) % 864e5;
+                // The hours, minutes, seconds, and milliseconds are obtained by
+                // decomposing the time within the day. See section 15.9.1.10.
+                hours = floor(time / 36e5) % 24;
+                minutes = floor(time / 6e4) % 60;
+                seconds = floor(time / 1e3) % 60;
+                milliseconds = time % 1e3;
+              } else {
+                year = value.getUTCFullYear();
+                month = value.getUTCMonth();
+                date = value.getUTCDate();
+                hours = value.getUTCHours();
+                minutes = value.getUTCMinutes();
+                seconds = value.getUTCSeconds();
+                milliseconds = value.getUTCMilliseconds();
+              }
+              // Serialize extended years correctly.
+              value = (year <= 0 || year >= 1e4 ? (year < 0 ? "-" : "+") + toPaddedString(6, year < 0 ? -year : year) : toPaddedString(4, year)) +
+                "-" + toPaddedString(2, month + 1) + "-" + toPaddedString(2, date) +
+                // Months, dates, hours, minutes, and seconds should have two
+                // digits; milliseconds should have three.
+                "T" + toPaddedString(2, hours) + ":" + toPaddedString(2, minutes) + ":" + toPaddedString(2, seconds) +
+                // Milliseconds are optional in ES 5.0, but required in 5.1.
+                "." + toPaddedString(3, milliseconds) + "Z";
+            } else {
+              value = null;
+            }
+          } else if (typeof value.toJSON == "function" && ((className != "[object Number]" && className != "[object String]" && className != "[object Array]") || isProperty.call(value, "toJSON"))) {
+            // Prototype <= 1.6.1 adds non-standard `toJSON` methods to the
+            // `Number`, `String`, `Date`, and `Array` prototypes. JSON 3
+            // ignores all `toJSON` methods on these objects unless they are
+            // defined directly on an instance.
+            value = value.toJSON(property);
+          }
+        }
+        if (callback) {
+          // If a replacement function was provided, call it to obtain the value
+          // for serialization.
+          value = callback.call(object, property, value);
+        }
+        if (value === null) {
+          return "null";
+        }
+        className = getClass.call(value);
+        if (className == "[object Boolean]") {
+          // Booleans are represented literally.
+          return "" + value;
+        } else if (className == "[object Number]") {
+          // JSON numbers must be finite. `Infinity` and `NaN` are serialized as
+          // `"null"`.
+          return value > -1 / 0 && value < 1 / 0 ? "" + value : "null";
+        } else if (className == "[object String]") {
+          // Strings are double-quoted and escaped.
+          return quote(value);
+        }
+        // Recursively serialize objects and arrays.
+        if (typeof value == "object") {
+          // Check for cyclic structures. This is a linear search; performance
+          // is inversely proportional to the number of unique nested objects.
+          for (length = stack.length; length--;) {
+            if (stack[length] === value) {
+              // Cyclic structures cannot be serialized by `JSON.stringify`.
+              throw TypeError();
+            }
+          }
+          // Add the object to the stack of traversed objects.
+          stack.push(value);
+          results = [];
+          // Save the current indentation level and indent one additional level.
+          prefix = indentation;
+          indentation += whitespace;
+          if (className == "[object Array]") {
+            // Recursively serialize array elements.
+            for (index = 0, length = value.length; index < length; any || (any = true), index++) {
+              element = serialize(index, value, callback, properties, whitespace, indentation, stack);
+              results.push(element === undef ? "null" : element);
+            }
+            return any ? (whitespace ? "[\n" + indentation + results.join(",\n" + indentation) + "\n" + prefix + "]" : ("[" + results.join(",") + "]")) : "[]";
+          } else {
+            // Recursively serialize object members. Members are selected from
+            // either a user-specified list of property names, or the object
+            // itself.
+            forEach(properties || value, function (property) {
+              var element = serialize(property, value, callback, properties, whitespace, indentation, stack);
+              if (element !== undef) {
+                // According to ES 5.1 section 15.12.3: "If `gap` {whitespace}
+                // is not the empty string, let `member` {quote(property) + ":"}
+                // be the concatenation of `member` and the `space` character."
+                // The "`space` character" refers to the literal space
+                // character, not the `space` {width} argument provided to
+                // `JSON.stringify`.
+                results.push(quote(property) + ":" + (whitespace ? " " : "") + element);
+              }
+              any || (any = true);
+            });
+            return any ? (whitespace ? "{\n" + indentation + results.join(",\n" + indentation) + "\n" + prefix + "}" : ("{" + results.join(",") + "}")) : "{}";
+          }
+          // Remove the object from the traversed object stack.
+          stack.pop();
+        }
+      };
+
+      // Public: `JSON.stringify`. See ES 5.1 section 15.12.3.
+      JSON3.stringify = function (source, filter, width) {
+        var whitespace, callback, properties, index, length, value;
+        if (typeof filter == "function" || typeof filter == "object" && filter) {
+          if (getClass.call(filter) == "[object Function]") {
+            callback = filter;
+          } else if (getClass.call(filter) == "[object Array]") {
+            // Convert the property names array into a makeshift set.
+            properties = {};
+            for (index = 0, length = filter.length; index < length; value = filter[index++], ((getClass.call(value) == "[object String]" || getClass.call(value) == "[object Number]") && (properties[value] = 1)));
+          }
+        }
+        if (width) {
+          if (getClass.call(width) == "[object Number]") {
+            // Convert the `width` to an integer and create a string containing
+            // `width` number of space characters.
+            if ((width -= width % 1) > 0) {
+              for (whitespace = "", width > 10 && (width = 10); whitespace.length < width; whitespace += " ");
+            }
+          } else if (getClass.call(width) == "[object String]") {
+            whitespace = width.length <= 10 ? width : width.slice(0, 10);
+          }
+        }
+        // Opera <= 7.54u2 discards the values associated with empty string keys
+        // (`""`) only if they are used directly within an object member list
+        // (e.g., `!("" in { "": 1})`).
+        return serialize("", (value = {}, value[""] = source, value), callback, properties, whitespace, "", []);
+      };
+    }
+
+    // Public: Parses a JSON source string.
+    if (!parseSupported) {
+      fromCharCode = String.fromCharCode;
+      // Internal: A map of escaped control characters and their unescaped
+      // equivalents.
+      Unescapes = {
+        "\\": "\\",
+        '"': '"',
+        "/": "/",
+        "b": "\b",
+        "t": "\t",
+        "n": "\n",
+        "f": "\f",
+        "r": "\r"
+      };
+
+      // Internal: Resets the parser state and throws a `SyntaxError`.
+      abort = function() {
+        Index = Source = null;
+        throw SyntaxError();
+      };
+
+      // Internal: Returns the next token, or `"$"` if the parser has reached
+      // the end of the source string. A token may be a string, number, `null`
+      // literal, or Boolean literal.
+      lex = function () {
+        var source = Source, length = source.length, symbol, value, begin, position, sign;
+        while (Index < length) {
+          symbol = source.charAt(Index);
+          if ("\t\r\n ".indexOf(symbol) > -1) {
+            // Skip whitespace tokens, including tabs, carriage returns, line
+            // feeds, and space characters.
+            Index++;
+          } else if ("{}[]:,".indexOf(symbol) > -1) {
+            // Parse a punctuator token at the current position.
+            Index++;
+            return symbol;
+          } else if (symbol == '"') {
+            // Advance to the next character and parse a JSON string at the
+            // current position. String tokens are prefixed with the sentinel
+            // `@` character to distinguish them from punctuators.
+            for (value = "@", Index++; Index < length;) {
+              symbol = source.charAt(Index);
+              if (symbol < " ") {
+                // Unescaped ASCII control characters are not permitted.
+                abort();
+              } else if (symbol == "\\") {
+                // Parse escaped JSON control characters, `"`, `\`, `/`, and
+                // Unicode escape sequences.
+                symbol = source.charAt(++Index);
+                if ('\\"/btnfr'.indexOf(symbol) > -1) {
+                  // Revive escaped control characters.
+                  value += Unescapes[symbol];
+                  Index++;
+                } else if (symbol == "u") {
+                  // Advance to the first character of the escape sequence.
+                  begin = ++Index;
+                  // Validate the Unicode escape sequence.
+                  for (position = Index + 4; Index < position; Index++) {
+                    symbol = source.charAt(Index);
+                    // A valid sequence comprises four hexdigits that form a
+                    // single hexadecimal value.
+                    if (!(symbol >= "0" && symbol <= "9" || symbol >= "a" && symbol <= "f" || symbol >= "A" && symbol <= "F")) {
+                      // Invalid Unicode escape sequence.
+                      abort();
+                    }
+                  }
+                  // Revive the escaped character.
+                  value += fromCharCode("0x" + source.slice(begin, Index));
+                } else {
+                  // Invalid escape sequence.
+                  abort();
+                }
+              } else {
+                if (symbol == '"') {
+                  // An unescaped double-quote character marks the end of the
+                  // string.
+                  break;
+                }
+                // Append the original character as-is.
+                value += symbol;
+                Index++;
+              }
+            }
+            if (source.charAt(Index) == '"') {
+              Index++;
+              // Return the revived string.
+              return value;
+            }
+            // Unterminated string.
+            abort();
+          } else {
+            // Parse numbers and literals.
+            begin = Index;
+            // Advance the scanner's position past the sign, if one is
+            // specified.
+            if (symbol == "-") {
+              sign = true;
+              symbol = source.charAt(++Index);
+            }
+            // Parse an integer or floating-point value.
+            if (symbol >= "0" && symbol <= "9") {
+              // Leading zeroes are interpreted as octal literals.
+              if (symbol == "0" && (symbol = source.charAt(Index + 1), symbol >= "0" && symbol <= "9")) {
+                // Illegal octal literal.
+                abort();
+              }
+              sign = false;
+              // Parse the integer component.
+              for (; Index < length && (symbol = source.charAt(Index), symbol >= "0" && symbol <= "9"); Index++);
+              // Floats cannot contain a leading decimal point; however, this
+              // case is already accounted for by the parser.
+              if (source.charAt(Index) == ".") {
+                position = ++Index;
+                // Parse the decimal component.
+                for (; position < length && (symbol = source.charAt(position), symbol >= "0" && symbol <= "9"); position++);
+                if (position == Index) {
+                  // Illegal trailing decimal.
+                  abort();
+                }
+                Index = position;
+              }
+              // Parse exponents.
+              symbol = source.charAt(Index);
+              if (symbol == "e" || symbol == "E") {
+                // Skip past the sign following the exponent, if one is
+                // specified.
+                symbol = source.charAt(++Index);
+                if (symbol == "+" || symbol == "-") {
+                  Index++;
+                }
+                // Parse the exponential component.
+                for (position = Index; position < length && (symbol = source.charAt(position), symbol >= "0" && symbol <= "9"); position++);
+                if (position == Index) {
+                  // Illegal empty exponent.
+                  abort();
+                }
+                Index = position;
+              }
+              // Coerce the parsed value to a JavaScript number.
+              return +source.slice(begin, Index);
+            }
+            // A negative sign may only precede numbers.
+            if (sign) {
+              abort();
+            }
+            // `true`, `false`, and `null` literals.
+            if (source.slice(Index, Index + 4) == "true") {
+              Index += 4;
+              return true;
+            } else if (source.slice(Index, Index + 5) == "false") {
+              Index += 5;
+              return false;
+            } else if (source.slice(Index, Index + 4) == "null") {
+              Index += 4;
+              return null;
+            }
+            // Unrecognized token.
+            abort();
+          }
+        }
+        // Return the sentinel `$` character if the parser has reached the end
+        // of the source string.
+        return "$";
+      };
+
+      // Internal: Parses a JSON `value` token.
+      get = function (value) {
+        var results, any, key;
+        if (value == "$") {
+          // Unexpected end of input.
+          abort();
+        }
+        if (typeof value == "string") {
+          if (value.charAt(0) == "@") {
+            // Remove the sentinel `@` character.
+            return value.slice(1);
+          }
+          // Parse object and array literals.
+          if (value == "[") {
+            // Parses a JSON array, returning a new JavaScript array.
+            results = [];
+            for (;; any || (any = true)) {
+              value = lex();
+              // A closing square bracket marks the end of the array literal.
+              if (value == "]") {
+                break;
+              }
+              // If the array literal contains elements, the current token
+              // should be a comma separating the previous element from the
+              // next.
+              if (any) {
+                if (value == ",") {
+                  value = lex();
+                  if (value == "]") {
+                    // Unexpected trailing `,` in array literal.
+                    abort();
+                  }
+                } else {
+                  // A `,` must separate each array element.
+                  abort();
+                }
+              }
+              // Elisions and leading commas are not permitted.
+              if (value == ",") {
+                abort();
+              }
+              results.push(get(value));
+            }
+            return results;
+          } else if (value == "{") {
+            // Parses a JSON object, returning a new JavaScript object.
+            results = {};
+            for (;; any || (any = true)) {
+              value = lex();
+              // A closing curly brace marks the end of the object literal.
+              if (value == "}") {
+                break;
+              }
+              // If the object literal contains members, the current token
+              // should be a comma separator.
+              if (any) {
+                if (value == ",") {
+                  value = lex();
+                  if (value == "}") {
+                    // Unexpected trailing `,` in object literal.
+                    abort();
+                  }
+                } else {
+                  // A `,` must separate each object member.
+                  abort();
+                }
+              }
+              // Leading commas are not permitted, object property names must be
+              // double-quoted strings, and a `:` must separate each property
+              // name and value.
+              if (value == "," || typeof value != "string" || value.charAt(0) != "@" || lex() != ":") {
+                abort();
+              }
+              results[value.slice(1)] = get(lex());
+            }
+            return results;
+          }
+          // Unexpected token encountered.
+          abort();
+        }
+        return value;
+      };
+
+      // Internal: Updates a traversed object member.
+      update = function(source, property, callback) {
+        var element = walk(source, property, callback);
+        if (element === undef) {
+          delete source[property];
+        } else {
+          source[property] = element;
+        }
+      };
+
+      // Internal: Recursively traverses a parsed JSON object, invoking the
+      // `callback` function for each value. This is an implementation of the
+      // `Walk(holder, name)` operation defined in ES 5.1 section 15.12.2.
+      walk = function (source, property, callback) {
+        var value = source[property], length;
+        if (typeof value == "object" && value) {
+          if (getClass.call(value) == "[object Array]") {
+            for (length = value.length; length--;) {
+              update(value, length, callback);
+            }
+          } else {
+            // `forEach` can't be used to traverse an array in Opera <= 8.54,
+            // as `Object#hasOwnProperty` returns `false` for array indices
+            // (e.g., `![1, 2, 3].hasOwnProperty("0")`).
+            forEach(value, function (property) {
+              update(value, property, callback);
+            });
+          }
+        }
+        return callback.call(source, property, value);
+      };
+
+      // Public: `JSON.parse`. See ES 5.1 section 15.12.2.
+      JSON3.parse = function (source, callback) {
+        Index = 0;
+        Source = source;
+        var result = get(lex());
+        // If a JSON string contains multiple tokens, it is invalid.
+        if (lex() != "$") {
+          abort();
+        }
+        // Reset the parser state.
+        Index = Source = null;
+        return callback && getClass.call(callback) == "[object Function]" ? walk((value = {}, value[""] = result, value), "", callback) : result;
+      };
+    }
+  }
+}).call(lib);
 (function(lib, undefined) {
+    /*global lib*/
+    "use strict";
+    
     lib.dom = {
         byId: function byId(id, element) {
             return (element || lib.document).getElementById(id);
@@ -780,26 +1564,31 @@
         },
         
         byQuery: function byQuery(query, element) {
-            return (element || lib.document).querySelector(name);
+            return (element || lib.document).querySelector(query);
         },
         
         byQueryAll: function byQueryAll(query, element) {
-            return (element || lib.document).querySelectorAll(name);
+            return (element || lib.document).querySelectorAll(query);
         },
         
         byClass: function byClass(klass, tag, element) {
-            if (typeof tag == "object" && typeof element == "undefined") {
+            var i, elements, nodeName, returnElements,
+                classes, classesToCheck, xhtmlNamespace, namespaceResolver, node, match;
+            
+            if (typeof tag === "object" && typeof element === "undefined") {
                 element = tag;
                 tag = undefined;
             }
             
             if (lib.document.getElementsByClassName) {
-                var elements = (element || lib.document).getElementsByClassName(klass),
-                    nodeName = tag ? new RegExp("\\b" + tag + "\\b", "i") : null,
-                    returnElements = [];
-                for (var i = 0; i < elements.length; i++)
-                    if (!nodeName || nodeName.test(elements[i].nodeName))
+                elements = (element || lib.document).getElementsByClassName(klass);
+                nodeName = tag ? new RegExp("\\b" + tag + "\\b", "i") : null;
+                returnElements = [];
+                for (i = 0; i < elements.length; i++) {
+                    if (!nodeName || nodeName.test(elements[i].nodeName)) {
                         returnElements.push(elements[i]);
+                    }
+                }
                 
                 return returnElements;
             } else {
@@ -807,17 +1596,16 @@
                 element = element || lib.document;
                 
                 if (lib.document.evaluate) {
-                    var classes = klass.split(" "),
-                        classesToCheck = "",
-                        xhtmlNamespace = "http://www.w3.org/1999/xhtml",
-                        namespaceResolver = (lib.document.documentElement.namespaceURI === xhtmlNamespace)
-                                            ? xhtmlNamespace : null,
-                        returnElements = [],
-                        elements,
-                        node;
+                    classes = klass.split(" ");
+                    classesToCheck = "";
+                    xhtmlNamespace = "http://www.w3.org/1999/xhtml";
+                    namespaceResolver = (lib.document.documentElement.namespaceURI === xhtmlNamespace) ?
+                                            xhtmlNamespace : null;
+                    returnElements = [];
                     
-                    for (var i = 0; i < classes.length; i++)
+                    for (i = 0; i < classes.length; i++) {
                         classesToCheck += "[contains(concat(' ', @class, ' '), ' " + classes[i] + " ')]";
+                    }
                     
                     try {
                         elements = lib.document.evaluate(".//" + tag + classesToCheck, element, namespaceResolver, 0, null);
@@ -825,29 +1613,33 @@
                         elements = lib.document.evaluate(".//" + tag + classesToCheck, element, null, 0, null);
                     }
                     
-                    while (node = elements.iterateNext())
+                    /*jshint boss:true*/
+                    while (node = elements.iterateNext()) {
                         returnElements.push(node);
+                    }
                     
                     return returnElements;
                 } else {
-                    var classes = klass.split(" "),
-                        classesToCheck = [],
-                        elements = (tag === "*" && element.all) ? element.all : element.getElementsByTagName(tag),
-                        current,
-                        returnElements = [],
-                        match;
-                    for (var i = 0; i < classes.length; i++)
-                        classesToCheck.push(new RegExp("(^|\\s)" + classes[i] + "(\\s|$)"));
+                    classes = klass.split(" ");
+                    classesToCheck = [];
+                    elements = (tag === "*" && element.all) ? element.all : element.getElementsByTagName(tag);
+                    returnElements = [];
                     
-                    for (var i = 0; i < elements.length; i++) {
+                    for (i = 0; i < classes.length; i++) {
+                        classesToCheck.push(new RegExp("(^|\\s)" + classes[i] + "(\\s|$)"));
+                    }
+                    
+                    for (i = 0; i < elements.length; i++) {
                         match = false;
                         for (var j = 0; j < classesToCheck.length; j++){
                             match = classesToCheck[j].test(elements[i].className);
-                            if (!match)
+                            if (!match) {
                                 break;
+                            }
                         }
-                        if (match)
+                        if (match) {
                             returnElements.push(elements[i]);
+                        }
                     }
                     
                     return returnElements;
@@ -856,43 +1648,51 @@
         },
         
         parent: function parent(element, klass, name) {
+            /*jshint curly:false*/
+            
             klass = klass && new RegExp("(^|\\s)" + klass + "(\\s|$)");
             name = name && name.toUpperCase();
             
-            while ((element = element.parentNode)
-                && (klass && !klass.test(element.className)
-                    || name && name != element.nodeName));
+            while ((element = element.parentNode) &&
+                   (klass && !klass.test(element.className) ||
+                   name && name !== element.nodeName));
             
             return element;
         },
         
         isChild: function isChild(element, parent) {
             while ((element = element.parentNode)) {
-                if (element === parent) return true;
+                if (element === parent) {
+                    return true;
+                }
             }
             return false;
         },
         
         prev: function prev(element, klass, name) {
+            /*jshint curly:false*/
+            
             klass = klass && new RegExp("(^|\\s)" + klass + "(\\s|$)");
             name = name && name.toUpperCase();
             
-            while ((element = element.previousSibling)
-                && (element.nodeType != 1
-                    || klass && !klass.test(element.className)
-                    || name && name != element.nodeName));
+            while ((element = element.previousSibling) &&
+                   (element.nodeType !== 1 ||
+                   klass && !klass.test(element.className) ||
+                   name && name !== element.nodeName));
             
             return element;
         },
         
         next: function next(element, klass, name) {
+            /*jshint curly:false*/
+            
             klass = klass && new RegExp("(^|\\s)" + klass + "(\\s|$)");
             name = name && name.toUpperCase();
             
-            while ((element = element.nextSibling)
-                && (element.nodeType != 1
-                    || klass && !klass.test(element.className)
-                    || name && name != element.nodeName));
+            while ((element = element.nextSibling) &&
+                   (element.nodeType !== 1 ||
+                   klass && !klass.test(element.className) ||
+                   name && name !== element.nodeName));
             
             return element;
         },
@@ -910,33 +1710,39 @@
             return p && p.removeChild(element);
         },
         
-        before: function before(element, before) {
-            var p = this.parent(before);
-            return p && p.insertBefore(element, before);
+        before: function before(element, ref) {
+            var p = this.parent(ref);
+            return p && p.insertBefore(element, ref);
         },
         
-        after: function after(element, after) {
-            var p = this.parent(after);
-            return p && p.insertBefore(element, after.nextSibling);
+        after: function after(element, ref) {
+            var p = this.parent(ref);
+            return p && p.insertBefore(element, ref.nextSibling);
         },
         
         hasClass: function hasClass(element, klass) {
-            return (element.classList && element.classList.contains)
-                    ? element.classList.contains(klass)
-                    : new RegExp("(^|\\s)" + klass + "(\\s|$)").test(element.className);
+            return (element.classList && element.classList.contains) ?
+                    element.classList.contains(klass) :
+                    new RegExp("(^|\\s)" + klass + "(\\s|$)").test(element.className);
         },
         
         addClass: function addClass(element, klass) {
             if (!this.hasClass(element, klass)) {
-                if (element.classList && element.classList.add) element.classList.add(klass);
-                else element.className += (element.className ? " " : "") + klass;
+                if (element.classList && element.classList.add) {
+                    element.classList.add(klass);
+                } else {
+                    element.className += (element.className ? " " : "") + klass;
+                }
             }
             return element;
         },
         
         removeClass: function removeClass(element, klass) {
-            if (element.classList && element.classList.remove) element.classList.remove(klass);
-            else element.className = element.className.replace(new RegExp("(^|\\s)" + klass + "(\\s|$)"), "$2");
+            if (element.classList && element.classList.remove) {
+                element.classList.remove(klass);
+            } else {
+                element.className = element.className.replace(new RegExp("(^|\\s)" + klass + "(\\s|$)"), "$2");
+            }
             return element;
         },
         
@@ -984,16 +1790,23 @@
         NOTATION_NODE: 2048,
         
         isDOMNode: function isDOMNode(element) {
-            if (!(lib.util.isObject(element)
-              && ("nodeType" in element || typeof element.nodeType == "number")
-                )) return false;
+            if (!(lib.util.isObject(element) &&
+                ("nodeType" in element || typeof element.nodeType === "number"))) {
+                return false;
+            }
             return element.nodeType > 0 && element.nodeType < 13;
         },
         
         isTypeOf: function isTypeOf(element, type) {
-            if (!this.isDOMNode(element)) return;
+            /*jshint bitwise:false*/
+            
+            if (!this.isDOMNode(element)) {
+                return;
+            }
             for (var i = 0, len = nodeTypesMap.length; i < len; i++) {
-                if (element.nodeType == nodeTypesMap[i][0] && (type | nodeTypesMap[i][1]) == type) return true;
+                if (element.nodeType === nodeTypesMap[i][0] && ((type | nodeTypesMap[i][1])) === type) {
+                    return true;
+                }
             }
             return false;
         },
@@ -1006,7 +1819,7 @@
                         values[key] = lib.dom.dataset.get(element, key);
                     });
                     return values;
-                };
+                }
                 
                 if (element.dataset) {
                     return element.dataset[key];
@@ -1049,17 +1862,23 @@
         [10, 512],
         [11, 1024],
         [12, 2048]
-    ]
+    ];
 })(lib);
-
 (function(lib, undefined) {
+    /*global lib*/
+    "use strict";
+    
     function NodeList(elements) {
-        if (this == lib.dom) return new NodeList(elements);
+        if (this === lib.dom) {
+            return new NodeList(elements);
+        }
         
         this.items = [];
         this.length = 0;
         
-        if (!elements) return;
+        if (!elements) {
+            return;
+        }
         
         elements = lib.array.toArray(elements);
         
@@ -1068,7 +1887,7 @@
                 this.length = this.push(elements[i]);
             }
         }
-    };
+    }
     
     lib.extend(NodeList.prototype, {
         toString: function toString() {
@@ -1142,11 +1961,13 @@
                     for (var j = 0; j < outPrev.length; j++) {
                         var found = false;
                         for (var k = 0; k < arguments[i].length; k++) {
-                            if (outPrev[j] == arguments[i].item(k)) {
+                            if (outPrev[j] === arguments[i].item(k)) {
                                 found = true;
                             }
                         }
-                        if (!found) outCurr.push(outPrev[j]);
+                        if (!found) {
+                            outCurr.push(outPrev[j]);
+                        }
                     }
                     outPrev = outCurr;
                     outCurr = [];
@@ -1169,11 +1990,11 @@
         },
         
         forEach: function forEach(callback, thisObject) {
-            lib.array.forEach(this.items, callback, thisObject)
+            lib.array.forEach(this.items, callback, thisObject);
         },
         
         every: function every(callback, thisObject) {
-            return lib.array.every(this.items, callback, thisObject)
+            return lib.array.every(this.items, callback, thisObject);
         },
         
         some: function some(callback, thisObject) {
@@ -1185,7 +2006,7 @@
         },
         
         map: function map(callback, thisObject) {
-            return lib.array.map(this.items, callback, thisObject)
+            return lib.array.map(this.items, callback, thisObject);
         },
         
         byTag: function byTag(tag) {
@@ -1214,6 +2035,7 @@
     });
     
     function clean() {
+        /*jshint validthis:true */
         var out = [];
         for (var i = 0; i < this.items.length; i++) {
             if (this.items[i].nodeType && lib.array.inArray([1, 9], this.items[i].nodeType)) {
@@ -1225,8 +2047,10 @@
     
     lib.dom.NodeList = NodeList;
 })(lib);
-
 ﻿(function(lib, undefined) {
+    /*global lib*/
+    "use strict";
+    
     var event = {
         add: function(target, type, callback) {
             var _type = type.toLowerCase();
@@ -1239,17 +2063,20 @@
                 target.__events[type].handle = null;
                 target.__events[type].IECallbacks = target.__events[type].IECallbacks || { keys: [], callbacks: []};
                 target.__events[type].hasAttribute = false;
-                target.__events[type].supported = typeof target["on" + _type] == "object"
-                                                 || typeof target["on" + _type] == "function";
+                target.__events[type].supported = typeof target["on" + _type] === "object" ||
+                                                  typeof target["on" + _type] === "function";
                 
                 if (target.__events[type].supported) {
-                    if (target["on" + _type] !== null) this.addIEAttributeEvent(target, type);
+                    if (target["on" + _type] !== null) {
+                        this.addIEAttributeEvent(target, type);
+                    }
                     
                     var _callback = lib.bind(function() {
-                        if (typeof callback.attributeEvent == "undefined") {
-                            var event = fixIEEvent(lib.window.event, target);
+                        var event;
+                        if (typeof callback.attributeEvent === "undefined") {
+                            event = fixIEEvent(lib.window.event, target);
                         } else {
-                            var event = fixIEEvent(lib.window.event, null);
+                            event = fixIEEvent(lib.window.event, null);
                         }
                         
                         return callback.apply(target, [event]);
@@ -1264,17 +2091,19 @@
                         return this.callback.apply(this.event.currentTarget, [this.event]);
                     };
                     
-                    var _target = (target == lib.document) ? lib.document.documentElement : target;
-                    if (typeof target.libEvent == "undefined") {
+                    var _target = (target === lib.document) ? lib.document.documentElement : target;
+                    if (typeof target.libEvent === "undefined") {
                         target.libEvent = 0;
-                        if (target != _target) _target.libEvent = 0;
+                        if (target !== _target) {
+                            _target.libEvent = 0;
+                        }
                     }
                     
                     _target.attachEvent("onpropertychange", function(event) {
-                        if (event.propertyName == "libEvent") {
-                            if (target.__events[type].handle.event
-                                && target == target.__events[type].handle.event.currentTarget
-                                && target.__events[type].handle.dispatched === false) {
+                        if (event.propertyName === "libEvent") {
+                            if (target.__events[type].handle.event &&
+                                target === target.__events[type].handle.event.currentTarget &&
+                                target.__events[type].handle.dispatched === false) {
                                 target.__events[type].handle.dispatched = true;
                                 return lib.bind(target.__events[type].handle, target.__events[type].handle)(event);
                             }
@@ -1285,9 +2114,15 @@
         },
         
         initEventProperty: function(target, type) {
-            if (typeof target.__events == "undefined") target.__events = {};
-            if (typeof target.__events[type] == "undefined") target.__events[type] = {};
-            if (typeof target.__events[type].callbacks == "undefined") target.__events[type].callbacks = {};
+            if (typeof target.__events === "undefined") {
+                target.__events = {};
+            }
+            if (typeof target.__events[type] === "undefined") {
+                target.__events[type] = {};
+            }
+            if (typeof target.__events[type].callbacks === "undefined") {
+                target.__events[type].callbacks = {};
+            }
         },
         
         addIEAttributeEvent: function(target, type) {
@@ -1302,22 +2137,25 @@
         },
         
         remove: function(target, type, callback) {
-            if (typeof type == "undefined") {
+            var i, len;
+            if (typeof type === "undefined") {
                 for (type in target.__events) {
-                    this.remove(target, type);
+                    if (target.__events.hasOwnProperty(type)) {
+                        this.remove(target, type);
+                    }
                 }
             }
             
-            if (typeof target.__events == "object" && typeof target.__events[type] == "object") {
-                if (typeof callback == "function") {
+            if (typeof target.__events === "object" && typeof target.__events[type] === "object") {
+                if (typeof callback === "function") {
                     if (this.w3c) {
                         target.removeEventListener(type, callback, false);
                     } else if (this.ie && target.__events[type].supported) {
                         var _callback,
                             iec = target.__events[type].IECallbacks,
                             guid = callback.__guid;
-                        for (var i = 0, len = iec.keys.length; i < len; i++) {
-                            if (iec.keys[i] == guid) {
+                        for (i = 0, len = iec.keys.length; i < len; i++) {
+                            if (iec.keys[i] === guid) {
                                 _callback = iec.callbacks[i];
                                 iec.keys.splice(i, 0);
                                 iec.callbacks.splice(i, 0);
@@ -1329,7 +2167,9 @@
                     delete target.__events[type].callbacks[callback.__guid];
                 } else {
                     for (i in target.__events[type].callbacks) {
-                        this.remove(target, type, target.__events[type].callbacks[i]);
+                        if (target.__events[type].callbacks.hasOwnProperty(i)) {
+                            this.remove(target, type, target.__events[type].callbacks[i]);
+                        }
                     }
                 }
             }
@@ -1340,18 +2180,16 @@
                 switch (this.events[type]) {
                     case this.types.mouse:
                         return this.dispatchMouseEvent(target, type, properties);
-                        break;
                     case this.types.keyboard:
                         return this.dispatchKeyboardEvent(target, type, properties);
-                        break;
                     case this.types.html:
                         return this.dispatchHTMLEvent(target, type, properties);
-                        break;
                     case this.types.dom: // not implemented
+                        break;
                     case this.types.wheel: // not implemented
+                        break;
                     default:
                         return this.dispatchUIEvent(target, type, properties);
-                        break;
                 }
             } else if (this.ie) {
                 return this.dispatchIEEvent(target, type, properties);
@@ -1359,7 +2197,7 @@
         },
         
         dispatchMouseEvent: function(target, type, properties) {
-            if (typeof properties == "undefined") var properties = {};
+            properties = (typeof properties !== "undefined") ? properties : {};
             var eventProperties = {
                     bubbles: true,
                     cancelable: true,
@@ -1388,7 +2226,7 @@
         },
         
         dispatchKeyboardEvent: function(target, type, properties) {
-            if (typeof properties == "undefined") var properties = {};
+            properties = (typeof properties !== "undefined") ? properties : {};
             var eventProperties = {
                     bubbles: true,
                     cancelable: true,
@@ -1403,7 +2241,7 @@
             lib.extend(eventProperties, properties || {});
             
             var event = document.createEvent("KeyboardEvent");
-            if (typeof event.initKeyboardEvent == "undefined" && event.initKeyEvent) {
+            if (typeof event.initKeyboardEvent === "undefined" && event.initKeyEvent) {
                 event.initKeyboardEvent = event.initKeyEvent;
             }
             
@@ -1415,7 +2253,7 @@
         },
         
         dispatchHTMLEvent: function(target, type, properties) {
-            if (typeof properties == "undefined") var properties = {};
+            properties = (typeof properties !== "undefined") ? properties : {};
             var eventProperties = {
                     bubbles: true,
                     cancelable: true
@@ -1430,7 +2268,7 @@
         },
         
         dispatchUIEvent: function(target, type, properties) {
-            if (typeof properties == "undefined") var properties = {};
+            properties = (typeof properties !== "undefined") ? properties : {};
             var eventProperties = {
                     bubbles: true,
                     cancelable: true,
@@ -1449,24 +2287,26 @@
         },
         
         dispatchIEEvent: function(target, type, properties) {
-            var _type = type.toLowerCase();
-            if (typeof target.__events == "undefined") {
-                if (typeof target["on" + _type] == "object" || typeof target["on" + _type] == "function") {
+            var event, _type = type.toLowerCase();
+            if (typeof target.__events === "undefined") {
+                if (typeof target["on" + _type] === "object" || typeof target["on" + _type] === "function") {
                     this.addIEAttributeEvent(target, type);
                 } else {
                     return;
                 }
             }
             
-            if (typeof target.__events[type] == "undefined") return;
+            if (typeof target.__events[type] === "undefined") {
+                return;
+            }
             
             properties = properties || {};
             if (target.__events[type].supported) {
-                var event = document.createEventObject();
+                event = document.createEventObject();
                 lib.extend(event, properties);
                 return target.fireEvent("on" + type, event);
             } else {
-                var event = lib.extend(properties, {
+                event = lib.extend(properties, {
                     target: target,
                     type: type,
                     currentTarget: target
@@ -1475,12 +2315,12 @@
                 while (target) {
                     if (target.__events && target.__events[type]) {
                         for (var i in target.__events[type].callbacks) {
-                            if (typeof properties.safe == "boolean" && properties.safe === true) {
+                            if (typeof properties.safe === "boolean" && properties.safe === true) {
                                 target.__events[type].handle.callback = target.__events[type].callbacks[i];
                                 target.__events[type].handle.event = event;
                                 target.__events[type].handle.dispatched = false;
                                 
-                                if (event.currentTarget == document) {
+                                if (event.currentTarget === document) {
                                     document.documentElement.libEvent++;
                                 } else {
                                     event.currentTarget.libEvent++;
@@ -1495,9 +2335,9 @@
                             }
                         }
                     }
-                    target = event.currentTarget = !event.cancelBubble && target.parentNode;
+                    target = event.currentTarget = (!event.cancelBubble && target.parentNode);
                 }
-                return !(event.returnValue === false);
+                return (event.returnValue !== false);
             }
         },
                 
@@ -1554,13 +2394,11 @@
     
     function fixIEEvent(event) {
         event.target = event.target || event.srcElement;
-        event.currentTarget = (arguments[1] && arguments[1].nodeName)
-                              ? arguments[1]
-                              : (arguments[1] === null)
-                                ? null : event.currentTarget;
+        event.currentTarget = (arguments[1] && arguments[1].nodeName) ? arguments[1] :
+                                  (arguments[1] === null) ? null : event.currentTarget;
         
         if (arguments[1] && arguments[1].nodeName && event.toElement && event.toElement.nodeName) {
-            event.relatedTarget = (event.toElement == event.target) ? event.fromElement : event.toElement;
+            event.relatedTarget = (event.toElement === event.target) ? event.fromElement : event.toElement;
         }
         
         event.preventDefault = function() {
@@ -1572,7 +2410,7 @@
         };
         
         return event;
-    };
+    }
     
     function extendIEEventSafe(target) {
         var props = ["altKey", "attrChange", "attrName", "bubbles", "button", "cancelable", "charCode",
@@ -1583,99 +2421,29 @@
                     "view", "wheelDelta", "which"];
         for (var i, k = 0; ++k < arguments.length;) {
             for (i in props) {
-                if (!(typeof arguments[k][props[i]] == "undefined"))
-                target[props[i]] = arguments[k][props[i]];
+                if (typeof arguments[k][props[i]] !== "undefined") {
+                    target[props[i]] = arguments[k][props[i]];
+                }
             }
         }
         
         target.originalEvent = arguments[1];
         return target;
-    };
+    }
     
     lib.event = {
         add: lib.bind(event.add, event),
         remove: lib.bind(event.remove, event),
-        dispatch: lib.bind(event.dispatch, event),
-        support: testSupport,
-        compat: {
-            DOMAttrModified: DOMAttrModified
-        }
-    }
-    
-    function testSupport(type) {
-        if (typeof type != "string") return null;
-        switch (type) {
-            case "DOMAttrModified":
-                return testDOMAttrModified();
-                break;
-            default:
-                return null;
-                break;
-        }
-    };
-    
-    function testDOMAttrModified() {
-        if (event.w3c) {
-            var capable = false,
-                div = document.createElement("div");
-            div.addEventListener("DOMAttrModified", function(event) {
-                if (event && event.target && event.target === div)
-                    capable = true;
-            }, false);
-            div.style.display = "none";
-            return capable;
-        } else {
-            return true;
-        }
-    };
-    
-    // Webkit DOMAttrModified workaround
-    function DOMAttrModified(target, path) {
-        if (!event.w3c) return;
-        
-        event.initEventProperty(target, "DOMAttrModified");
-        if (typeof target.__events["DOMAttrModified"].oldProperties == "undefined")
-            target.__events["DOMAttrModified"].oldProperties = {};
-        
-        var array = path.split("."),
-            last = array[array.length -1];
-        
-        function find() {
-            var newValue = target[array[0]];
-            for (var i = 1; i < array.length; i++) {
-                newValue = newValue[array[i]];
-            }
-            return newValue;
-        }
-        
-        var guid = lib.guid(),
-            prevValue = target.__events["DOMAttrModified"].oldProperties[guid] = find(),
-            interval = lib.window.setInterval(function() {
-            var newValue = find();
-            if (prevValue !== newValue) {
-                event.dispatch(target, "DOMAttrModified", {
-                    MODIFICATION: 1,
-                    ADDITION: 2,
-                    REMOVAL: 3,
-                    attrChange: 1,
-                    attrName: path,
-                    newValue: newValue,
-                    prevValue: prevValue,
-                    compat: {
-                        stop: function() {
-                            lib.window.clearInterval(interval);
-                            delete target.__events["DOMAttrModified"].oldProperties[guid];
-                        }
-                    }
-                });
-                prevValue = newValue;
-            }
-        }, 15);
+        dispatch: lib.bind(event.dispatch, event)
     };
 })(lib);
-
 (function(lib, undefined) {
-    if (lib.isDOMReady) return;
+    /*jshint noarg:false, strict: false*/
+    /*global lib*/
+    
+    if (lib.isDOMReady) {
+        return;
+    }
     
     function onReady() {
         if (!lib.isDOMReady) {
@@ -1683,15 +2451,15 @@
             lib.event.dispatch(document, "DOMReady", { safe: true });
             lib.event.remove(lib.document, "libReady");
         }
-    };
+    }
     
-    if (document.readyState == "complete") { // already here!
+    if (document.readyState === "complete") { // already here!
         onReady();
     } else if (!window.opera && document.attachEvent) {
         // like IE
         
         // not an iframe...
-        if (document.documentElement.doScroll && window == top) {
+        if (document.documentElement.doScroll && window === top) {
             (function() {
                 try {
                     document.documentElement.doScroll("left");
@@ -1708,7 +2476,7 @@
             document.attachEvent(
                 "onreadystatechange",
                 function() {
-                    if (document.readyState == "complete") {
+                    if (document.readyState === "complete") {
                         document.detachEvent("onreadystatechange", arguments.callee);
                         onReady();
                     }
@@ -1738,8 +2506,10 @@
         throw new Error("Unable to bind lib ready listener to document.");
     }
 })(lib);
-
 (function(lib, undefined) {
+    /*global lib*/
+    "use strict";
+    
     lib.dimensions = {
         CONTENT: 1,
         BORDER: 2,
@@ -1768,10 +2538,15 @@
         }
     };
 })(lib);
-
 if (!window.opera) try { document.execCommand("BackgroundImageCache", false, true); } catch(e) {};
-
 (function(lib, undefined) {
+    /*global lib*/
+    "use strict";
+    
+    var vendors, lastTime;
+    vendors = ["ms", "moz", "webkit", "o"];
+    lastTime = 0;
+    
     lib.tween = {
         // http://st-on-it.blogspot.com/2011/05/calculating-cubic-bezier-function.html
         Bezier: function Bezier(p1, p2, p3, p4) {
@@ -1795,17 +2570,19 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
                 while (i < 5) { // making 5 iterations max
                     z = bezierX(x) - t;
                     
-                    if (Math.abs(z) < 1e-3) break; // if already got close enough
+                    if (Math.abs(z) < 1e-3) {
+                        break; // if already got close enough
+                    }
                     
                     x = x - z / bezierXDerivative(x);
                     i++;
                 }
                 return x;
-            };
+            }
             
             return function findYFor(t) {
                 return bezierY(findXFor(t));
-            }
+            };
         },
         
         bezier: function bezier(p1, p2, p3, p4) {
@@ -1821,11 +2598,43 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
         },
         
         getRequestAnimationFrame: function getRequestAnimationFrame() {
-            return lib.window.requestAnimationFrame
-                || lib.window.mozRequestAnimationFrame
-                || lib.window.webkitRequestAnimationFrame
-                || lib.window.msRequestAnimationFrame
-                || lib.window.oRequestAnimationFrame;
+            var rAF;
+            rAF = lib.window.requestAnimationFrame;
+            for (var i = 0; i < vendors.length && !rAF; i++) {
+                rAF = lib.window[vendors[i] + "RequestAnimationFrame"];
+            }
+            
+            if (rAF) {
+                return rAF;
+            } else {
+                return function(callback) {
+                    var currTime, timeToCall, id;
+                    currTime = new Date().getTime();
+                    timeToCall = Math.max(0, 16 - (currTime - lastTime));
+                    id = lib.window.setTimeout(function() {
+                        callback(currTime + timeToCall);
+                    }, timeToCall);
+                    lastTime = currTime + timeToCall;
+                    return id;
+               }
+           }
+        },
+        
+        getCancelAnimationFrame: function getCancelAnimationFrame() {
+            var cAF;
+            cAF = lib.window.cancelAnimationFrame;
+            for (var i = 0; i < vendors.length && !cAF; i++) {
+                cAF = lib.window[vendors[i] + "CancelAnimationFrame"] ||
+                      lib.window[vendors[i] + "CancelRequestAnimationFrame"];
+            }
+            
+            if (rAF) {
+                return rAF;
+            } else {
+               return function(id) {
+                   lib.window.clearTimeout(id);
+               }
+           }
         },
         
         run: function run(from, to, duration, easing, stepCallback, endCallback) {
@@ -1836,57 +2645,62 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
                 isFunctionEndCallback = lib.util.isFunction(endCallback),
                 requestAnimationFrame = this.getRequestAnimationFrame();
             
-            if (typeof easing == "string" && this.easing[easing]) {
+            if (typeof easing === "string" && this.easing[easing]) {
                 easingFunction = this.bezier.apply(this, this.easing[easing]);
-            } else if (lib.util.isArray(easing) && easing.length == 4) {
+            } else if (lib.util.isArray(easing) && easing.length === 4) {
                 easingFunction = this.bezier.apply(this, easing);
             } else {
                 easingFunction = this.bezier.apply(this, this.easing.ease);
             }
             
-            function intervalFunction() {
+            function intervalFunction(time) {
+                /*jshint validthis:true */
+                var time, deltaTime, fraqTime, end, delta;
+                
                 if (!startTime) {
-                    startTime = +new Date;
-                    if (requestAnimationFrame) requestAnimationFrame(intervalFunction);
+                    startTime = +new Date();
+                    requestAnimationFrame(intervalFunction);
                     return;
                 }
                 
-                var time = +new Date,
-                    deltaTime = time - startTime,
-                    fraqTime = easingFunction(deltaTime / duration),
-                    end = (duration - deltaTime < 13) ? true : false, // --OMG-OPTIMIZE
-                    delta = (to - from) * fraqTime,
-                    delta = from + delta;
-                    //delta = end ? to : delta <= to ? delta : to;
-                    delta = end ? to : delta;
-                if (isFunctionStepCallback) stepCallback.call(this, delta);
+                time = +new Date();
+                deltaTime = time - startTime;
+                fraqTime = easingFunction(deltaTime / duration);
+                end = (duration - deltaTime < 13) ? true : false; // --OMG-OPTIMIZE
+                delta = (to - from) * fraqTime;
+                delta = from + delta;
+                //delta = end ? to : delta <= to ? delta : to;
+                delta = end ? to : delta;
+                if (isFunctionStepCallback) {
+                    stepCallback.call(this, delta);
+                }
                 if (end) {
-                    if (isFunctionEndCallback) endCallback.call(this, delta);
-                    if (!requestAnimationFrame) lib.window.clearInterval(intervalHandle);
+                    if (isFunctionEndCallback) {
+                        endCallback.call(this, delta);
+                    }
                     return;
                 } else {
-                    if (requestAnimationFrame) requestAnimationFrame(intervalFunction);
+                    requestAnimationFrame(intervalFunction);
                 }
             }
             
-            if (requestAnimationFrame) {
-                requestAnimationFrame(intervalFunction);
-            } else {
-                intervalHandle = lib.window.setInterval(intervalFunction, 13);
-            }
+            requestAnimationFrame(intervalFunction);
         }
     };
 })(lib);
-
 (function(lib, undefined) {
+    /*global lib*/
+    "use strict";
+    
     function Widget(element) {
+        /*jshint bitwise:false*/
         this.__guid = lib.guid();
         this.__bound = {};
         
-        if (lib.dom.isTypeOf(element, lib.dom.ELEMENT_NODE | lib.dom.DOCUMENT_NODE) || element == lib.window) {
+        if (lib.dom.isTypeOf(element, lib.dom.ELEMENT_NODE | lib.dom.DOCUMENT_NODE) || element === lib.window) {
             this.element = element;
         }
-    };
+    }
     
     lib.extend(Widget.prototype, {
         _bind: function _bind(method) {
@@ -1916,17 +2730,18 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
         }
     });
     
-    function WidgetFactory(widgetConstructor, bind) {
+    function WidgetFactory(widgetConstructor) {
         this.widgetConstructor = widgetConstructor;
         this.items = [];
         this.length = 0;
         this.name = lib.util.getFunctionName(this.widgetConstructor);
-    };
+    }
     
     lib.extend(WidgetFactory.prototype, {
         run: function run(elements, properties) {
-            var widget, name;
-            if (lib.dom.isTypeOf(elements, lib.dom.ELEMENT_NODE | lib.dom.DOCUMENT_NODE) || elements == lib.window) {
+            /*jshint bitwise:false*/
+            var widget;
+            if (lib.dom.isTypeOf(elements, lib.dom.ELEMENT_NODE | lib.dom.DOCUMENT_NODE) || elements === lib.window) {
                 elements = [elements];
             } else if (elements) {
                 elements = lib.array.toArray(elements);
@@ -1947,7 +2762,7 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
         },
         
         create: function create(elementize, properties) {
-            if (elementize !== true && !!elementize != false && arguments.length == 1) {
+            if (elementize !== true && elementize !== false && arguments.length === 1) {
                 properties = elementize;
                 elementize = false;
             }
@@ -1964,7 +2779,9 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
         
         destroy: function destroy(widget) {
             for (var i = 0, l = this.items.length; i < l; i++) {
-                if (widget && widget != this.items[i]) continue;
+                if (widget && widget !== this.items[i]) {
+                    continue;
+                }
                 
                 widget.dispose();
                 
@@ -2013,8 +2830,10 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
     };
     
 })(lib);
-
 (function(lib, undefined) {
+    /*global lib*/
+    "use strict";
+    
     lib.widget.helpers = {};
     
     lib.extend(lib.widget.helpers, {
@@ -2032,13 +2851,13 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
             lib.array.forEach(this.__events, function(event, i, array) {
                 var match = true, hit = false;
                 if (target) {
-                    match = match && target == event[0];
+                    match = (match && target === event[0]);
                 }
                 if (type) {
-                    match = match && type == event[1];
+                    match = (match && type === event[1]);
                 }
                 if (callback) {
-                    match = match && callback == event[2];
+                    match = (match && callback === event[2]);
                 }
                 
                 if (match) {
@@ -2057,11 +2876,17 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
         }
     });
 })(lib);
-
 (function(lib, undefined) {
+    /*global lib*/
+    "use strict";
+    
     function Model(object, element) {
-        if (this == lib.widget) return new Model(object, element);
-        if (!lib.util.isObject(object)) return;
+        if (this === lib.widget) {
+            return new Model(object, element);
+        }
+        if (!lib.util.isObject(object)) {
+            return;
+        }
         
         this.__guid = lib.guid();
         this._bound = {};
@@ -2072,15 +2897,17 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
         }
         
         for (var prop in object) {
-            var _this = this,
-                propBindable = this[prop] = this._element
-                                            ? lib.util.Bindable(object[prop], this._element)
-                                            : lib.util.Bindable(object[prop]);
-            propBindable.name = prop;
-            propBindable.model = this;
-            propBindable.bind(dispatcher);
+            if (object.hasOwnProperty(prop)) {
+                var propBindable;
+                propBindable = this[prop] = this._element ?
+                                            lib.util.Bindable(object[prop], this._element) :
+                                            lib.util.Bindable(object[prop]);
+                propBindable.name = prop;
+                propBindable.model = this;
+                propBindable.bind(dispatcher);
+            }
         }
-    };
+    }
     
     lib.extend(Model.prototype, {
         dispose: function dispose() {
@@ -2093,7 +2920,9 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
         },
         
         bind: function bind(target) {
-            if (!lib.util.isFunction(target)) return;
+            if (!lib.util.isFunction(target)) {
+                return;
+            }
             
             var id = lib.guid(),
                 bound = {
@@ -2115,38 +2944,47 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
             var bound = this._bound;
             
             for (var i in bound) {
-                var specificTarget = bound[i].target == target;
-                if (specificTarget || !target) {
-                    if (this._element) {
-                        lib.event.remove(this._element, this._eventName, this._bound[i].proxy);
+                if (bound.hasOwnProperty(i)) {
+                    var specificTarget = (bound[i].target === target);
+                    if (specificTarget || !target) {
+                        if (this._element) {
+                            lib.event.remove(this._element, this._eventName, this._bound[i].proxy);
+                        }
+                        delete bound[i];
                     }
-                    delete bound[i];
+                    
+                    if (specificTarget) {
+                        break;
+                    }
                 }
-                
-                if (specificTarget) break;
             }
         }
     });
     
     function dispatcher(value, oldValue) {
+        /*jshint validthis:true*/
         var model = this.model;
         if (model._element) {
             lib.event.dispatch(model._element, model._eventName, { value: value, oldValue: oldValue, property: this.name });
         } else {
             callAllBound.call(model, value, oldValue, this.name);
         }
-    };
+    }
     
     function callAllBound(value, oldValue, property) {
+        /*jshint validthis:true*/
         for (var i in this._bound) {
-            callBound.call(this, i, value, oldValue, property);
+            if (this._bound.hasOwnProperty(i)) {
+                callBound.call(this, i, value, oldValue, property);
+            }
         }
-    };
+    }
     
     function callBound(id, value, oldValue, property) {
+        /*jshint validthis:true*/
         var bound = this._bound[id];
         bound.target.call(this, value, oldValue, property);
-    };
+    }
     
     lib.widget.Model = Model;
     
