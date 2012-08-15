@@ -1,12 +1,5 @@
-/*
-Copyright (c) 2012 https://github.com/monai/
+/*! lib - A JavaScript Library - http://github.com/monai/lib | License: MIT */
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
 (function(window, undefined) {
     "use strict";
     
@@ -106,6 +99,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         window.log = log;
     }
 })(window);
+
 (function(lib, undefined) {
     /*global lib*/
     "use strict";
@@ -203,6 +197,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     
     function F() {}
 })(lib);
+
 (function(lib, undefined) {
     /*global lib*/
     "use strict";
@@ -239,6 +234,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     lib.util.Benchmark = Benchmark;
     
 })(lib);
+
 (function(lib, undefined) {
     /*global lib*/
     "use strict";
@@ -365,6 +361,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     lib.util.Bindable = Bindable;
     
 })(lib);
+
 (function(lib, undefined) {
     /*global lib*/
     "use strict";
@@ -412,6 +409,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }
     };
 })(lib);
+
 (function(lib, undefined) {
     /*global lib*/
     "use strict";
@@ -665,6 +663,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }
     };
 })(lib);
+
 (function(lib, undefined) {
     /*global lib*/
     "use strict";
@@ -744,6 +743,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }
     };
 })(lib);
+
 (function(lib, undefined) {
     /*global lib*/
     "use strict";
@@ -783,8 +783,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }
     };
 })(lib);
+
 /*! JSON v3.2.3 | http://bestiejs.github.com/json3 | Copyright 2012, Kit Cambridge | http://kit.mit-license.org */
 (function () {
+  /*jshint eqeqeq:false*/
   // Convenience aliases.
   var getClass = {}.toString, isProperty, forEach, undef;
 
@@ -1550,6 +1552,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     }
   }
 }).call(lib);
+
 (function(lib, undefined) {
     /*global lib*/
     "use strict";
@@ -1864,6 +1867,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         [12, 2048]
     ];
 })(lib);
+
 (function(lib, undefined) {
     /*global lib*/
     "use strict";
@@ -2047,7 +2051,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     
     lib.dom.NodeList = NodeList;
 })(lib);
-﻿(function(lib, undefined) {
+
+(function(lib, undefined) {
     /*global lib*/
     "use strict";
     
@@ -2137,11 +2142,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         },
         
         remove: function(target, type, callback) {
-            var i, len;
+            var i, len, t;
             if (typeof type === "undefined") {
-                for (type in target.__events) {
-                    if (target.__events.hasOwnProperty(type)) {
-                        this.remove(target, type);
+                for (t in target.__events) {
+                    if (target.__events.hasOwnProperty(t)) {
+                        this.remove(target, t);
                     }
                 }
             }
@@ -2215,7 +2220,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 },
                 customProperties = lib.object.subtract(properties, eventProperties);
             lib.extend(eventProperties, properties || {});
-
+            
             var event = document.createEvent("MouseEvents");
             event.initMouseEvent(type, eventProperties.bubbles, eventProperties.cancelable, lib.window,
                 eventProperties.detail, eventProperties.screenX, eventProperties.screenY, eventProperties.clientX,
@@ -2340,7 +2345,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
                 return (event.returnValue !== false);
             }
         },
-                
+        
         w3c: (document.addEventListener) ? true : false,
         ie: (document.attachEvent && !document.addEventListener) ? true : false,
         
@@ -2437,6 +2442,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         dispatch: lib.bind(event.dispatch, event)
     };
 })(lib);
+
 (function(lib, undefined) {
     /*jshint noarg:false, strict: false*/
     /*global lib*/
@@ -2506,6 +2512,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         throw new Error("Unable to bind lib ready listener to document.");
     }
 })(lib);
+
 (function(lib, undefined) {
     /*global lib*/
     "use strict";
@@ -2538,7 +2545,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }
     };
 })(lib);
-if (!window.opera) try { document.execCommand("BackgroundImageCache", false, true); } catch(e) {};
+
+if (!window.opera) { try { document.execCommand("BackgroundImageCache", false, true); } catch(e) {} }
+
 (function(lib, undefined) {
     /*global lib*/
     "use strict";
@@ -2616,7 +2625,7 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
                     }, timeToCall);
                     lastTime = currTime + timeToCall;
                     return id;
-               }
+                };
            }
         },
         
@@ -2628,18 +2637,17 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
                       lib.window[vendors[i] + "CancelRequestAnimationFrame"];
             }
             
-            if (rAF) {
-                return rAF;
+            if (cAF) {
+                return cAF;
             } else {
                return function(id) {
                    lib.window.clearTimeout(id);
-               }
+               };
            }
         },
         
         run: function run(from, to, duration, easing, stepCallback, endCallback) {
             var startTime,
-                intervalHandle,
                 easingFunction,
                 isFunctionStepCallback = lib.util.isFunction(stepCallback),
                 isFunctionEndCallback = lib.util.isFunction(endCallback),
@@ -2655,7 +2663,7 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
             
             function intervalFunction(time) {
                 /*jshint validthis:true */
-                var time, deltaTime, fraqTime, end, delta;
+                var deltaTime, fraqTime, end, delta;
                 
                 if (!startTime) {
                     startTime = +new Date();
@@ -2688,6 +2696,7 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
         }
     };
 })(lib);
+
 (function(lib, undefined) {
     /*global lib*/
     "use strict";
@@ -2830,6 +2839,7 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
     };
     
 })(lib);
+
 (function(lib, undefined) {
     /*global lib*/
     "use strict";
@@ -2876,6 +2886,7 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
         }
     });
 })(lib);
+
 (function(lib, undefined) {
     /*global lib*/
     "use strict";

@@ -75,7 +75,7 @@
                     }, timeToCall);
                     lastTime = currTime + timeToCall;
                     return id;
-               }
+                };
            }
         },
         
@@ -87,18 +87,17 @@
                       lib.window[vendors[i] + "CancelRequestAnimationFrame"];
             }
             
-            if (rAF) {
-                return rAF;
+            if (cAF) {
+                return cAF;
             } else {
                return function(id) {
                    lib.window.clearTimeout(id);
-               }
+               };
            }
         },
         
         run: function run(from, to, duration, easing, stepCallback, endCallback) {
             var startTime,
-                intervalHandle,
                 easingFunction,
                 isFunctionStepCallback = lib.util.isFunction(stepCallback),
                 isFunctionEndCallback = lib.util.isFunction(endCallback),
@@ -114,7 +113,7 @@
             
             function intervalFunction(time) {
                 /*jshint validthis:true */
-                var time, deltaTime, fraqTime, end, delta;
+                var deltaTime, fraqTime, end, delta;
                 
                 if (!startTime) {
                     startTime = +new Date();

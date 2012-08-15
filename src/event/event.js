@@ -1,4 +1,4 @@
-﻿(function(lib, undefined) {
+(function(lib, undefined) {
     /*global lib*/
     "use strict";
     
@@ -88,11 +88,11 @@
         },
         
         remove: function(target, type, callback) {
-            var i, len;
+            var i, len, t;
             if (typeof type === "undefined") {
-                for (type in target.__events) {
-                    if (target.__events.hasOwnProperty(type)) {
-                        this.remove(target, type);
+                for (t in target.__events) {
+                    if (target.__events.hasOwnProperty(t)) {
+                        this.remove(target, t);
                     }
                 }
             }
@@ -166,7 +166,7 @@
                 },
                 customProperties = lib.object.subtract(properties, eventProperties);
             lib.extend(eventProperties, properties || {});
-
+            
             var event = document.createEvent("MouseEvents");
             event.initMouseEvent(type, eventProperties.bubbles, eventProperties.cancelable, lib.window,
                 eventProperties.detail, eventProperties.screenX, eventProperties.screenY, eventProperties.clientX,
@@ -291,7 +291,7 @@
                 return (event.returnValue !== false);
             }
         },
-                
+        
         w3c: (document.addEventListener) ? true : false,
         ie: (document.attachEvent && !document.addEventListener) ? true : false,
         
