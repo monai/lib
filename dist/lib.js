@@ -106,8 +106,9 @@
     
     lib.util = {
         getType: function getType(object) {
-            var op = Object.prototype,
-                string = op.toString.call(object);
+            var op, string;
+            op = Object.prototype;
+            string = op.toString.call(object);
             if (object === null) {
                 return "null";
             } else if (object === undefined) {
@@ -129,7 +130,7 @@
             } else if (string === "[object RegExp]") {
                 return "RegExp";
             } else if (typeof object === "object") {
-                return this.getFunctionName(object.constructor);
+                return this.getConstructorName(object);
             }
         },
         
@@ -168,12 +169,24 @@
         getFunctionName: function getFunctionName(func) {
             if (this.isFunction(func)) {
                 var name = func.toString();
-                if (/^function (\S+?)\(/.test(name)) {
+                if (/^function (\S+?)\(/m.test(name)) {
                     return RegExp.$1;
                 }
-            } else {
-                return null;
             }
+            return undefined;
+        },
+        
+        getConstructorName: function getConstructorName(object) {
+            if (object !== undefined && object.constructor) {
+                var name = this.getFunctionName(object.constructor);
+                if (name === undefined) {
+                    if (/\[object (\S+?)\]/.test(object.constructor.toString())) {
+                        name = RegExp.$1;
+                    }
+                }
+                return name;
+            }
+            return undefined;
         },
         
         inherits: function inherits(constructor, superConstructor) {
@@ -1563,7 +1576,8 @@
         },
         
         byTag: function byTag(name, element) {
-            return (element || lib.document).getElementsByTagName(name);
+            var elems = (element || lib.document).getElementsByTagName(name);
+            return lib.array.toArray(elems);
         },
         
         byQuery: function byQuery(query, element) {
@@ -1571,7 +1585,8 @@
         },
         
         byQueryAll: function byQueryAll(query, element) {
-            return (element || lib.document).querySelectorAll(query);
+            var elems = (element || lib.document).querySelectorAll(query);
+            return lib.array.toArray(elems);
         },
         
         byClass: function byClass(klass, tag, element) {
@@ -1901,8 +1916,6 @@
         valueOf: function valueOf() {
             return this;
         },
-        
-        length: 0,
         
         item: function item(index) {
             return this.items[index];

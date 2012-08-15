@@ -67,7 +67,7 @@
         getFunctionName: function getFunctionName(func) {
             if (this.isFunction(func)) {
                 var name = func.toString();
-                if (/^function (\S+?)\(/.test(name)) {
+                if (/^function (\S+?)\(/m.test(name)) {
                     return RegExp.$1;
                 }
             }

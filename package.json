@@ -15,6 +15,6 @@
   "author": "monai",
   "license": "MIT",
   "dependencies": {
-    "grunt-closure-tools": "0.6.x",
+    "grunt-closure-tools": "0.6.x"
   }
 }
