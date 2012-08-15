@@ -1,12 +1,19 @@
 (function(lib, undefined) {
+    /*global lib*/
+    "use strict";
+    
     function Benchmark(name, start) {
-        if (this == lib.util) return new Benchmark(name, start);
+        if (this === lib.util) {
+            return new Benchmark(name, start);
+        }
         
         this.name = name;
         this.startTime = null;
         this.endTime = null;
-        if (start || typeof start == "undefined") this.start();
-    };
+        if (start || typeof start === "undefined") {
+            this.start();
+        }
+    }
     
     lib.extend(Benchmark.prototype, {
         start: function start() {

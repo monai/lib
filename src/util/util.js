@@ -1,4 +1,6 @@
 (function(lib, undefined) {
+    /*global lib*/
+    "use strict";
     
     lib.util = {
         getType: function getType(object) {
@@ -7,64 +9,66 @@
             if (object === null) {
                 return "null";
             } else if (object === undefined) {
-                return "undefined"
+                return "undefined";
             } else if (object === true || object === false) {
                 return "boolean";
-            } else if (string == "[object Array]") {
+            } else if (string === "[object Array]") {
                 return "Array";
-            } else if (string == "[object Arguments]" || !!(op.hasOwnProperty.call(object, "callee"))) {
+            } else if (string === "[object Arguments]" || !!(op.hasOwnProperty.call(object, "callee"))) {
                 return "Arguments";
-            } else if (string == "[object Function]") {
+            } else if (string === "[object Function]") {
                 return "Function";
-            } else if (string == "[object String]") {
+            } else if (string === "[object String]") {
                 return "String";
-            } else if (string == "[object Number]") {
+            } else if (string === "[object Number]") {
                 return "Number";
-            } else if (string == "[object Date]") {
+            } else if (string === "[object Date]") {
                 return "Date";
-            } else if (string == "[object RegExp]") {
+            } else if (string === "[object RegExp]") {
                 return "RegExp";
-            } else if (typeof object == "object") {
+            } else if (typeof object === "object") {
                 return this.getFunctionName(object.constructor);
             }
         },
         
         isObject: function isObject(object) {
-            return object === Object(object);
+            return object === new Object(object);
         },
         
         isArray: function isArray(object) {
-            return this.getType(object) == "Array";
+            return this.getType(object) === "Array";
         },
         
         isArguments: function isArguments(object) {
-            return this.getType(object) == "Arguments";
+            return this.getType(object) === "Arguments";
         },
         
         isFunction: function isFunction(object) {
-            return this.getType(object) == "Function";
+            return this.getType(object) === "Function";
         },
         
         isString: function isString(object) {
-            return this.getType(object) == "String";
+            return this.getType(object) === "String";
         },
         
         isNumber: function isNumber(object) {
-            return this.getType(object) == "Number";
+            return this.getType(object) === "Number";
         },
         
         isDate: function isDate(object) {
-            return this.getType(object) == "Date";
+            return this.getType(object) === "Date";
         },
         
         isRegExp: function isRegExp(object) {
-            return this.getType(object) == "RegExp";
+            return this.getType(object) === "RegExp";
         },
         
         getFunctionName: function getFunctionName(func) {
             if (this.isFunction(func)) {
                 var name = func.toString();
-                if (/^function (\S+?)\(/.test(name)) return RegExp.$1;
+                if (/^function (\S+?)\(/.test(name)) {
+                    return RegExp.$1;
+                }
             } else {
                 return null;
             }
@@ -83,10 +87,11 @@
                     }
                 });
             } else {
-                function f() {};
-                f.prototype = superConstructor.prototype;
-                constructor.prototype = new f;
+                F.prototype = superConstructor.prototype;
+                constructor.prototype = new F();
             }
         }
     };
+    
+    function F() {}
 })(lib);

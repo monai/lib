@@ -1,4 +1,7 @@
 (function(lib, undefined) {
+    /*global lib*/
+    "use strict";
+    
     lib.dimensions = {
         CONTENT: 1,
         BORDER: 2,

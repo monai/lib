@@ -1,12 +1,16 @@
 (function(lib, undefined) {
+    /*global lib*/
+    "use strict";
+    
     function Widget(element) {
+        /*jshint bitwise:false*/
         this.__guid = lib.guid();
         this.__bound = {};
         
-        if (lib.dom.isTypeOf(element, lib.dom.ELEMENT_NODE | lib.dom.DOCUMENT_NODE) || element == lib.window) {
+        if (lib.dom.isTypeOf(element, lib.dom.ELEMENT_NODE | lib.dom.DOCUMENT_NODE) || element === lib.window) {
             this.element = element;
         }
-    };
+    }
     
     lib.extend(Widget.prototype, {
         _bind: function _bind(method) {
@@ -36,17 +40,18 @@
         }
     });
     
-    function WidgetFactory(widgetConstructor, bind) {
+    function WidgetFactory(widgetConstructor) {
         this.widgetConstructor = widgetConstructor;
         this.items = [];
         this.length = 0;
         this.name = lib.util.getFunctionName(this.widgetConstructor);
-    };
+    }
     
     lib.extend(WidgetFactory.prototype, {
         run: function run(elements, properties) {
-            var widget, name;
-            if (lib.dom.isTypeOf(elements, lib.dom.ELEMENT_NODE | lib.dom.DOCUMENT_NODE) || elements == lib.window) {
+            /*jshint bitwise:false*/
+            var widget;
+            if (lib.dom.isTypeOf(elements, lib.dom.ELEMENT_NODE | lib.dom.DOCUMENT_NODE) || elements === lib.window) {
                 elements = [elements];
             } else if (elements) {
                 elements = lib.array.toArray(elements);
@@ -67,7 +72,7 @@
         },
         
         create: function create(elementize, properties) {
-            if (elementize !== true && !!elementize != false && arguments.length == 1) {
+            if (elementize !== true && elementize !== false && arguments.length === 1) {
                 properties = elementize;
                 elementize = false;
             }
@@ -84,7 +89,9 @@
         
         destroy: function destroy(widget) {
             for (var i = 0, l = this.items.length; i < l; i++) {
-                if (widget && widget != this.items[i]) continue;
+                if (widget && widget !== this.items[i]) {
+                    continue;
+                }
                 
                 widget.dispose();
                 

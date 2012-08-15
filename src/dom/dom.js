@@ -1,7 +1,10 @@
 (function(lib, undefined) {
+    /*global lib*/
+    "use strict";
+    
     lib.dom = {
-        byId: function byId(id) {
-            return lib.document.getElementById(id);
+        byId: function byId(id, element) {
+            return (element || lib.document).getElementById(id);
         },
         
         byTag: function byTag(name, element) {
@@ -9,26 +12,31 @@
         },
         
         byQuery: function byQuery(query, element) {
-            return (element || lib.document).querySelector(name);
+            return (element || lib.document).querySelector(query);
         },
         
         byQueryAll: function byQueryAll(query, element) {
-            return (element || lib.document).querySelectorAll(name);
+            return (element || lib.document).querySelectorAll(query);
         },
         
         byClass: function byClass(klass, tag, element) {
-            if (typeof tag == "object" && typeof element == "undefined") {
+            var i, elements, nodeName, returnElements,
+                classes, classesToCheck, xhtmlNamespace, namespaceResolver, node, match;
+            
+            if (typeof tag === "object" && typeof element === "undefined") {
                 element = tag;
                 tag = undefined;
             }
             
             if (lib.document.getElementsByClassName) {
-                var elements = (element || lib.document).getElementsByClassName(klass),
-                    nodeName = tag ? new RegExp("\\b" + tag + "\\b", "i") : null,
-                    returnElements = [];
-                for (var i = 0; i < elements.length; i++)
-                    if (!nodeName || nodeName.test(elements[i].nodeName))
+                elements = (element || lib.document).getElementsByClassName(klass);
+                nodeName = tag ? new RegExp("\\b" + tag + "\\b", "i") : null;
+                returnElements = [];
+                for (i = 0; i < elements.length; i++) {
+                    if (!nodeName || nodeName.test(elements[i].nodeName)) {
                         returnElements.push(elements[i]);
+                    }
+                }
                 
                 return returnElements;
             } else {
@@ -36,17 +44,16 @@
                 element = element || lib.document;
                 
                 if (lib.document.evaluate) {
-                    var classes = klass.split(" "),
-                        classesToCheck = "",
-                        xhtmlNamespace = "http://www.w3.org/1999/xhtml",
-                        namespaceResolver = (lib.document.documentElement.namespaceURI === xhtmlNamespace)
-                                            ? xhtmlNamespace : null,
-                        returnElements = [],
-                        elements,
-                        node;
+                    classes = klass.split(" ");
+                    classesToCheck = "";
+                    xhtmlNamespace = "http://www.w3.org/1999/xhtml";
+                    namespaceResolver = (lib.document.documentElement.namespaceURI === xhtmlNamespace) ?
+                                            xhtmlNamespace : null;
+                    returnElements = [];
                     
-                    for (var i = 0; i < classes.length; i++)
+                    for (i = 0; i < classes.length; i++) {
                         classesToCheck += "[contains(concat(' ', @class, ' '), ' " + classes[i] + " ')]";
+                    }
                     
                     try {
                         elements = lib.document.evaluate(".//" + tag + classesToCheck, element, namespaceResolver, 0, null);
@@ -54,29 +61,33 @@
                         elements = lib.document.evaluate(".//" + tag + classesToCheck, element, null, 0, null);
                     }
                     
-                    while (node = elements.iterateNext())
+                    /*jshint boss:true*/
+                    while (node = elements.iterateNext()) {
                         returnElements.push(node);
+                    }
                     
                     return returnElements;
                 } else {
-                    var classes = klass.split(" "),
-                        classesToCheck = [],
-                        elements = (tag === "*" && element.all) ? element.all : element.getElementsByTagName(tag),
-                        current,
-                        returnElements = [],
-                        match;
-                    for (var i = 0; i < classes.length; i++)
-                        classesToCheck.push(new RegExp("(^|\\s)" + classes[i] + "(\\s|$)"));
+                    classes = klass.split(" ");
+                    classesToCheck = [];
+                    elements = (tag === "*" && element.all) ? element.all : element.getElementsByTagName(tag);
+                    returnElements = [];
                     
-                    for (var i = 0; i < elements.length; i++) {
+                    for (i = 0; i < classes.length; i++) {
+                        classesToCheck.push(new RegExp("(^|\\s)" + classes[i] + "(\\s|$)"));
+                    }
+                    
+                    for (i = 0; i < elements.length; i++) {
                         match = false;
                         for (var j = 0; j < classesToCheck.length; j++){
                             match = classesToCheck[j].test(elements[i].className);
-                            if (!match)
+                            if (!match) {
                                 break;
+                            }
                         }
-                        if (match)
+                        if (match) {
                             returnElements.push(elements[i]);
+                        }
                     }
                     
                     return returnElements;
@@ -85,43 +96,51 @@
         },
         
         parent: function parent(element, klass, name) {
+            /*jshint curly:false*/
+            
             klass = klass && new RegExp("(^|\\s)" + klass + "(\\s|$)");
             name = name && name.toUpperCase();
             
-            while ((element = element.parentNode)
-                && (klass && !klass.test(element.className)
-                    || name && name != element.nodeName));
+            while ((element = element.parentNode) &&
+                   (klass && !klass.test(element.className) ||
+                   name && name !== element.nodeName));
             
             return element;
         },
         
         isChild: function isChild(element, parent) {
             while ((element = element.parentNode)) {
-                if (element === parent) return true;
+                if (element === parent) {
+                    return true;
+                }
             }
             return false;
         },
         
         prev: function prev(element, klass, name) {
+            /*jshint curly:false*/
+            
             klass = klass && new RegExp("(^|\\s)" + klass + "(\\s|$)");
             name = name && name.toUpperCase();
             
-            while ((element = element.previousSibling)
-                && (element.nodeType != 1
-                    || klass && !klass.test(element.className)
-                    || name && name != element.nodeName));
+            while ((element = element.previousSibling) &&
+                   (element.nodeType !== 1 ||
+                   klass && !klass.test(element.className) ||
+                   name && name !== element.nodeName));
             
             return element;
         },
         
         next: function next(element, klass, name) {
+            /*jshint curly:false*/
+            
             klass = klass && new RegExp("(^|\\s)" + klass + "(\\s|$)");
             name = name && name.toUpperCase();
             
-            while ((element = element.nextSibling)
-                && (element.nodeType != 1
-                    || klass && !klass.test(element.className)
-                    || name && name != element.nodeName));
+            while ((element = element.nextSibling) &&
+                   (element.nodeType !== 1 ||
+                   klass && !klass.test(element.className) ||
+                   name && name !== element.nodeName));
             
             return element;
         },
@@ -139,33 +158,39 @@
             return p && p.removeChild(element);
         },
         
-        before: function before(element, before) {
-            var p = this.parent(before);
-            return p && p.insertBefore(element, before);
+        before: function before(element, ref) {
+            var p = this.parent(ref);
+            return p && p.insertBefore(element, ref);
         },
         
-        after: function after(element, after) {
-            var p = this.parent(after);
-            return p && p.insertBefore(element, after.nextSibling);
+        after: function after(element, ref) {
+            var p = this.parent(ref);
+            return p && p.insertBefore(element, ref.nextSibling);
         },
         
         hasClass: function hasClass(element, klass) {
-            return (element.classList && element.classList.contains)
-                    ? element.classList.contains(klass)
-                    : new RegExp("(^|\\s)" + klass + "(\\s|$)").test(element.className);
+            return (element.classList && element.classList.contains) ?
+                    element.classList.contains(klass) :
+                    new RegExp("(^|\\s)" + klass + "(\\s|$)").test(element.className);
         },
         
         addClass: function addClass(element, klass) {
             if (!this.hasClass(element, klass)) {
-                if (element.classList && element.classList.add) element.classList.add(klass);
-                else element.className += (element.className ? " " : "") + klass;
+                if (element.classList && element.classList.add) {
+                    element.classList.add(klass);
+                } else {
+                    element.className += (element.className ? " " : "") + klass;
+                }
             }
             return element;
         },
         
         removeClass: function removeClass(element, klass) {
-            if (element.classList && element.classList.remove) element.classList.remove(klass);
-            else element.className = element.className.replace(new RegExp("(^|\\s)" + klass + "(\\s|$)"), "$2");
+            if (element.classList && element.classList.remove) {
+                element.classList.remove(klass);
+            } else {
+                element.className = element.className.replace(new RegExp("(^|\\s)" + klass + "(\\s|$)"), "$2");
+            }
             return element;
         },
         
@@ -213,16 +238,23 @@
         NOTATION_NODE: 2048,
         
         isDOMNode: function isDOMNode(element) {
-            if (!(lib.util.isObject(element)
-              && ("nodeType" in element || typeof element.nodeType == "number")
-                )) return false;
+            if (!(lib.util.isObject(element) &&
+                ("nodeType" in element || typeof element.nodeType === "number"))) {
+                return false;
+            }
             return element.nodeType > 0 && element.nodeType < 13;
         },
         
         isTypeOf: function isTypeOf(element, type) {
-            if (!this.isDOMNode(element)) return;
+            /*jshint bitwise:false*/
+            
+            if (!this.isDOMNode(element)) {
+                return;
+            }
             for (var i = 0, len = nodeTypesMap.length; i < len; i++) {
-                if (element.nodeType == nodeTypesMap[i][0] && (type | nodeTypesMap[i][1]) == type) return true;
+                if (element.nodeType === nodeTypesMap[i][0] && ((type | nodeTypesMap[i][1])) === type) {
+                    return true;
+                }
             }
             return false;
         },
@@ -235,7 +267,7 @@
                         values[key] = lib.dom.dataset.get(element, key);
                     });
                     return values;
-                };
+                }
                 
                 if (element.dataset) {
                     return element.dataset[key];
@@ -278,5 +310,5 @@
         [10, 512],
         [11, 1024],
         [12, 2048]
-    ]
+    ];
 })(lib);

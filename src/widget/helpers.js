@@ -1,4 +1,7 @@
 (function(lib, undefined) {
+    /*global lib*/
+    "use strict";
+    
     lib.widget.helpers = {};
     
     lib.extend(lib.widget.helpers, {
@@ -16,13 +19,13 @@
             lib.array.forEach(this.__events, function(event, i, array) {
                 var match = true, hit = false;
                 if (target) {
-                    match = match && target == event[0];
+                    match = (match && target === event[0]);
                 }
                 if (type) {
-                    match = match && type == event[1];
+                    match = (match && type === event[1]);
                 }
                 if (callback) {
-                    match = match && callback == event[2];
+                    match = (match && callback === event[2]);
                 }
                 
                 if (match) {

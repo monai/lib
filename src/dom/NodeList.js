@@ -1,11 +1,18 @@
 (function(lib, undefined) {
+    /*global lib*/
+    "use strict";
+    
     function NodeList(elements) {
-        if (this == lib.dom) return new NodeList(elements);
+        if (this === lib.dom) {
+            return new NodeList(elements);
+        }
         
         this.items = [];
         this.length = 0;
         
-        if (!elements) return;
+        if (!elements) {
+            return;
+        }
         
         elements = lib.array.toArray(elements);
         
@@ -14,7 +21,7 @@
                 this.length = this.push(elements[i]);
             }
         }
-    };
+    }
     
     lib.extend(NodeList.prototype, {
         toString: function toString() {
@@ -88,11 +95,13 @@
                     for (var j = 0; j < outPrev.length; j++) {
                         var found = false;
                         for (var k = 0; k < arguments[i].length; k++) {
-                            if (outPrev[j] == arguments[i].item(k)) {
+                            if (outPrev[j] === arguments[i].item(k)) {
                                 found = true;
                             }
                         }
-                        if (!found) outCurr.push(outPrev[j]);
+                        if (!found) {
+                            outCurr.push(outPrev[j]);
+                        }
                     }
                     outPrev = outCurr;
                     outCurr = [];
@@ -115,11 +124,11 @@
         },
         
         forEach: function forEach(callback, thisObject) {
-            lib.array.forEach(this.items, callback, thisObject)
+            lib.array.forEach(this.items, callback, thisObject);
         },
         
         every: function every(callback, thisObject) {
-            return lib.array.every(this.items, callback, thisObject)
+            return lib.array.every(this.items, callback, thisObject);
         },
         
         some: function some(callback, thisObject) {
@@ -131,7 +140,7 @@
         },
         
         map: function map(callback, thisObject) {
-            return lib.array.map(this.items, callback, thisObject)
+            return lib.array.map(this.items, callback, thisObject);
         },
         
         byTag: function byTag(tag) {
@@ -160,6 +169,7 @@
     });
     
     function clean() {
+        /*jshint validthis:true */
         var out = [];
         for (var i = 0; i < this.items.length; i++) {
             if (this.items[i].nodeType && lib.array.inArray([1, 9], this.items[i].nodeType)) {

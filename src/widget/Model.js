@@ -1,7 +1,14 @@
 (function(lib, undefined) {
+    /*global lib*/
+    "use strict";
+    
     function Model(object, element) {
-        if (this == lib.widget) return new Model(object, element);
-        if (!lib.util.isObject(object)) return;
+        if (this === lib.widget) {
+            return new Model(object, element);
+        }
+        if (!lib.util.isObject(object)) {
+            return;
+        }
         
         this.__guid = lib.guid();
         this._bound = {};
@@ -12,15 +19,17 @@
         }
         
         for (var prop in object) {
-            var _this = this,
-                propBindable = this[prop] = this._element
-                                            ? lib.util.Bindable(object[prop], this._element)
-                                            : lib.util.Bindable(object[prop]);
-            propBindable.name = prop;
-            propBindable.model = this;
-            propBindable.bind(dispatcher);
+            if (object.hasOwnProperty(prop)) {
+                var propBindable;
+                propBindable = this[prop] = this._element ?
+                                            lib.util.Bindable(object[prop], this._element) :
+                                            lib.util.Bindable(object[prop]);
+                propBindable.name = prop;
+                propBindable.model = this;
+                propBindable.bind(dispatcher);
+            }
         }
-    };
+    }
     
     lib.extend(Model.prototype, {
         dispose: function dispose() {
@@ -33,7 +42,9 @@
         },
         
         bind: function bind(target) {
-            if (!lib.util.isFunction(target)) return;
+            if (!lib.util.isFunction(target)) {
+                return;
+            }
             
             var id = lib.guid(),
                 bound = {
@@ -55,38 +66,47 @@
             var bound = this._bound;
             
             for (var i in bound) {
-                var specificTarget = bound[i].target == target;
-                if (specificTarget || !target) {
-                    if (this._element) {
-                        lib.event.remove(this._element, this._eventName, this._bound[i].proxy);
+                if (bound.hasOwnProperty(i)) {
+                    var specificTarget = (bound[i].target === target);
+                    if (specificTarget || !target) {
+                        if (this._element) {
+                            lib.event.remove(this._element, this._eventName, this._bound[i].proxy);
+                        }
+                        delete bound[i];
                     }
-                    delete bound[i];
+                    
+                    if (specificTarget) {
+                        break;
+                    }
                 }
-                
-                if (specificTarget) break;
             }
         }
     });
     
     function dispatcher(value, oldValue) {
+        /*jshint validthis:true*/
         var model = this.model;
         if (model._element) {
             lib.event.dispatch(model._element, model._eventName, { value: value, oldValue: oldValue, property: this.name });
         } else {
             callAllBound.call(model, value, oldValue, this.name);
         }
-    };
+    }
     
     function callAllBound(value, oldValue, property) {
+        /*jshint validthis:true*/
         for (var i in this._bound) {
-            callBound.call(this, i, value, oldValue, property);
+            if (this._bound.hasOwnProperty(i)) {
+                callBound.call(this, i, value, oldValue, property);
+            }
         }
-    };
+    }
     
     function callBound(id, value, oldValue, property) {
+        /*jshint validthis:true*/
         var bound = this._bound[id];
         bound.target.call(this, value, oldValue, property);
-    };
+    }
     
     lib.widget.Model = Model;
     

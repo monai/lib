@@ -1,11 +1,16 @@
 (function(lib, undefined) {
+    /*global lib*/
+    "use strict";
+    
     function Bindable(value, element) {
-        if (this == lib.util) return new Bindable(value, element);
+        if (this === lib.util) {
+            return new Bindable(value, element);
+        }
         
         this.__guid = lib.guid();
         this._bound = {};
         
-        if (arguments.length == 1 && lib.dom.isTypeOf(element, lib.dom.ELEMENT_NODE)) {
+        if (arguments.length === 1 && lib.dom.isTypeOf(element, lib.dom.ELEMENT_NODE)) {
             element = value;
             value = undefined;
         }
@@ -16,7 +21,7 @@
             this._element = element;
             this._eventName = "__bindableChange" + this.__guid;
         }
-    };
+    }
     
     lib.extend(Bindable.prototype, {
         dispose: function dispose() {
@@ -56,7 +61,7 @@
                     proxy: null
                 };
             
-            if (target && typeof property == "string") {
+            if (target && typeof property === "string") {
                 bound.target = [target, property];
             } else if (lib.util.isFunction(target)) {
                 bound.target = target;
@@ -75,38 +80,46 @@
             var bound = this._bound;
             
             for (var i in bound) {
-                var bTarget = bound[i].target,
-                    specificTarget = (bTarget === target
-                                      || lib.util.isArray(bTarget)
-                                         && bTarget[0] === target
-                                         && bTarget[1] === property);
-                
-                if (specificTarget || !target) {
-                    if (this._element) {
-                        lib.event.remove(this._element, this._eventName, this._bound[i].proxy);
+                if (bound.hasOwnProperty(i)) {
+                    var bTarget = bound[i].target,
+                        specificTarget = (bTarget === target ||
+                                          lib.util.isArray(bTarget) &&
+                                          bTarget[0] === target &&
+                                          bTarget[1] === property);
+                    
+                    if (specificTarget || !target) {
+                        if (this._element) {
+                            lib.event.remove(this._element, this._eventName, this._bound[i].proxy);
+                        }
+                        delete bound[i];
                     }
-                    delete bound[i];
+                    
+                    if (specificTarget) {
+                        break;
+                    }
                 }
-                
-                if (specificTarget) break;
             }
         }
     });
     
     function callAllBound(value, oldValue) {
+        /*jshint validthis:true */
         for (var i in this._bound) {
-            callBound.call(this, i, value, oldValue);
+            if (this._bound.hasOwnProperty(i)) {
+                callBound.call(this, i, value, oldValue);
+            }
         }
-    };
+    }
     
     function callBound(id, value, oldValue) {
+        /*jshint validthis:true */
         var bound = this._bound[id];
         if (lib.util.isArray(bound.target)) {
             bound.target[0][bound.target[1]] = value;
         } else {
             bound.target.call(this, value, oldValue);
         }
-    };
+    }
     
     lib.util.Bindable = Bindable;
     

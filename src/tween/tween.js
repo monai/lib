@@ -1,4 +1,7 @@
 (function(lib, undefined) {
+    /*global lib*/
+    "use strict";
+    
     lib.tween = {
         // http://st-on-it.blogspot.com/2011/05/calculating-cubic-bezier-function.html
         Bezier: function Bezier(p1, p2, p3, p4) {
@@ -22,17 +25,19 @@
                 while (i < 5) { // making 5 iterations max
                     z = bezierX(x) - t;
                     
-                    if (Math.abs(z) < 1e-3) break; // if already got close enough
+                    if (Math.abs(z) < 1e-3) {
+                        break; // if already got close enough
+                    }
                     
                     x = x - z / bezierXDerivative(x);
                     i++;
                 }
                 return x;
-            };
+            }
             
             return function findYFor(t) {
                 return bezierY(findXFor(t));
-            }
+            };
         },
         
         bezier: function bezier(p1, p2, p3, p4) {
@@ -48,11 +53,11 @@
         },
         
         getRequestAnimationFrame: function getRequestAnimationFrame() {
-            return lib.window.requestAnimationFrame
-                || lib.window.mozRequestAnimationFrame
-                || lib.window.webkitRequestAnimationFrame
-                || lib.window.msRequestAnimationFrame
-                || lib.window.oRequestAnimationFrame;
+            return lib.window.requestAnimationFrame ||
+                   lib.window.mozRequestAnimationFrame ||
+                   lib.window.webkitRequestAnimationFrame ||
+                   lib.window.msRequestAnimationFrame ||
+                   lib.window.oRequestAnimationFrame;
         },
         
         run: function run(from, to, duration, easing, stepCallback, endCallback) {
@@ -63,36 +68,49 @@
                 isFunctionEndCallback = lib.util.isFunction(endCallback),
                 requestAnimationFrame = this.getRequestAnimationFrame();
             
-            if (typeof easing == "string" && this.easing[easing]) {
+            if (typeof easing === "string" && this.easing[easing]) {
                 easingFunction = this.bezier.apply(this, this.easing[easing]);
-            } else if (lib.util.isArray(easing) && easing.length == 4) {
+            } else if (lib.util.isArray(easing) && easing.length === 4) {
                 easingFunction = this.bezier.apply(this, easing);
             } else {
                 easingFunction = this.bezier.apply(this, this.easing.ease);
             }
             
             function intervalFunction() {
+                /*jshint validthis:true */
+                var time, deltaTime, fraqTime, end, delta;
+                
                 if (!startTime) {
-                    startTime = +new Date;
-                    if (requestAnimationFrame) requestAnimationFrame(intervalFunction);
+                    startTime = +new Date();
+                    if (requestAnimationFrame) {
+                        requestAnimationFrame(intervalFunction);
+                    }
                     return;
                 }
                 
-                var time = +new Date,
-                    deltaTime = time - startTime,
-                    fraqTime = easingFunction(deltaTime / duration),
-                    end = (duration - deltaTime < 13) ? true : false, // --OMG-OPTIMIZE
-                    delta = (to - from) * fraqTime,
-                    delta = from + delta;
-                    //delta = end ? to : delta <= to ? delta : to;
-                    delta = end ? to : delta;
-                if (isFunctionStepCallback) stepCallback.call(this, delta);
+                time = +new Date();
+                deltaTime = time - startTime;
+                fraqTime = easingFunction(deltaTime / duration);
+                end = (duration - deltaTime < 13) ? true : false; // --OMG-OPTIMIZE
+                delta = (to - from) * fraqTime;
+                delta = from + delta;
+                //delta = end ? to : delta <= to ? delta : to;
+                delta = end ? to : delta;
+                if (isFunctionStepCallback) {
+                    stepCallback.call(this, delta);
+                }
                 if (end) {
-                    if (isFunctionEndCallback) endCallback.call(this, delta);
-                    if (!requestAnimationFrame) lib.window.clearInterval(intervalHandle);
+                    if (isFunctionEndCallback) {
+                        endCallback.call(this, delta);
+                    }
+                    if (!requestAnimationFrame) {
+                        lib.window.clearInterval(intervalHandle);
+                    }
                     return;
                 } else {
-                    if (requestAnimationFrame) requestAnimationFrame(intervalFunction);
+                    if (requestAnimationFrame) {
+                        requestAnimationFrame(intervalFunction);
+                    }
                 }
             }
             

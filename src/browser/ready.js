@@ -1,5 +1,10 @@
 (function(lib, undefined) {
-    if (lib.isDOMReady) return;
+    /*jshint noarg:false, strict: false*/
+    /*global lib*/
+    
+    if (lib.isDOMReady) {
+        return;
+    }
     
     function onReady() {
         if (!lib.isDOMReady) {
@@ -7,15 +12,15 @@
             lib.event.dispatch(document, "DOMReady", { safe: true });
             lib.event.remove(lib.document, "libReady");
         }
-    };
+    }
     
-    if (document.readyState == "complete") { // already here!
+    if (document.readyState === "complete") { // already here!
         onReady();
     } else if (!window.opera && document.attachEvent) {
         // like IE
         
         // not an iframe...
-        if (document.documentElement.doScroll && window == top) {
+        if (document.documentElement.doScroll && window === top) {
             (function() {
                 try {
                     document.documentElement.doScroll("left");
@@ -32,7 +37,7 @@
             document.attachEvent(
                 "onreadystatechange",
                 function() {
-                    if (document.readyState == "complete") {
+                    if (document.readyState === "complete") {
                         document.detachEvent("onreadystatechange", arguments.callee);
                         onReady();
                     }

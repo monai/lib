@@ -1,87 +1,78 @@
-/*
-Copyright (c) 2012 https://github.com/monai/
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
 (function(window, undefined) {
-        var log = function log() {
-            if (window.console && window.console.log && window.console.log.apply) {
-                window.console.log.apply(window.console, arguments);
-            } else {
-                log.output.push(lib.array.toArray(arguments).join(", "));
-                window.clearTimeout(log.time);
-                log.time = window.setTimeout(function() {
-                    var t = log.output.join("\r\n");
-                    log.output = [];
-                    alert(t);
-                }, 1000);
-            }
-            return arguments[0];
-        },
+    var log = function log() {
+        if (window.console && window.console.log && window.console.log.apply) {
+            window.console.log.apply(window.console, arguments);
+        } else {
+            log.output.push(lib.array.toArray(arguments).join(", "));
+            window.clearTimeout(log.time);
+            log.time = window.setTimeout(function() {
+                var t = log.output.join("\r\n");
+                log.output = [];
+                alert(t);
+            }, 1000);
+        }
+        return arguments[0];
+    },
+    
+    inspect = function inspect(object) {
+        var o = [];
+        for (var i in object) {
+            o.push(i + ": " + object[i]);
+        }
+        return o.join("\r\n");
+    },
+    
+    lib = {
+        log: log,
         
-        inspect = function inspect(object) {
-            var o = [];
-            for (var i in object) {
-                o.push(i + ": " + object[i]);
-            }
-            return o.join("\r\n");
-        },
+        inspect: inspect,
         
-        lib = {
-            log: log,
-            
-            inspect: inspect,
-            
-            window: window,
-            
-            document: window && window.document,
-            
-            isReady: false,
-            
-            isDOMReady: false,
-            
-            ready: function ready(callback, dom) {
-                if (callback === undefined) {
-                    lib.isReady = true;
-                    lib.event.dispatch(lib.document, "libReady");
-                    lib.event.remove(lib.document, "libReady");
-                } else if (typeof callback == "function") {
-                    if (!lib.isReady && !dom) {
-                        lib.event.add(lib.document, "libReady", lib.bind(callback, lib.window));
-                    } else if (!lib.isDOMReady && dom) {
-                        lib.event.add(lib.document, "DOMReady", lib.bind(callback, lib.window));
-                    } else {
-                        callback();
-                    }
-                }
-            },
-            
-            extend: function extend(target) {
-                for (var i, k = 0, len = arguments.length; ++k < len;)
-                    for (i in arguments[k]) target[i] = arguments[k][i];
-                return target;
-            },
-            
-            bind: function bind(method, context) {
-                if ("bind" in method) {
-                    return method.bind(context);
+        window: window,
+        
+        document: window && window.document,
+        
+        isReady: false,
+        
+        isDOMReady: false,
+        
+        ready: function ready(callback, dom) {
+            if (callback === undefined) {
+                lib.isReady = true;
+                lib.event.dispatch(lib.document, "libReady");
+                lib.event.remove(lib.document, "libReady");
+            } else if (typeof callback == "function") {
+                if (!lib.isReady && !dom) {
+                    lib.event.add(lib.document, "libReady", lib.bind(callback, lib.window));
+                } else if (!lib.isDOMReady && dom) {
+                    lib.event.add(lib.document, "DOMReady", lib.bind(callback, lib.window));
                 } else {
-                    return function bound() {
-                        return method.apply(context, arguments);
-                    };
+                    callback();
                 }
-            },
-            
-            guid: function guid(object) {
-                if (!object) return ++lib.guid.id;
-                if (!object.__guid) object.__guid = lib.guid.id++;
-                return object.__guid;
             }
-        };
+        },
+        
+        extend: function extend(target) {
+            for (var i, k = 0, len = arguments.length; ++k < len;)
+                for (i in arguments[k]) target[i] = arguments[k][i];
+            return target;
+        },
+        
+        bind: function bind(method, context) {
+            if ("bind" in method) {
+                return method.bind(context);
+            } else {
+                return function bound() {
+                    return method.apply(context, arguments);
+                };
+            }
+        },
+        
+        guid: function guid(object) {
+            if (!object) return ++lib.guid.id;
+            if (!object.__guid) object.__guid = lib.guid.id++;
+            return object.__guid;
+        }
+    };
     
     lib.log.output = [];
     lib.guid.id = 1;
@@ -89,6 +80,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     if (!window.lib) window.lib = lib;
     if (!window.log) window.log = log;
 })(window);
+
 (function(lib, undefined) {
     
     lib.util = {
@@ -181,6 +173,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }
     };
 })(lib);
+
 (function(lib, undefined) {
     function Benchmark(name, start) {
         if (this == lib.util) return new Benchmark(name, start);
@@ -210,6 +203,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     lib.util.Benchmark = Benchmark;
     
 })(lib);
+
 (function(lib, undefined) {
     function Bindable(value, element) {
         if (this == lib.util) return new Bindable(value, element);
@@ -323,6 +317,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     lib.util.Bindable = Bindable;
     
 })(lib);
+
 (function(lib, undefined) {
     lib.object = {
         keys: function keys(object) {
@@ -358,6 +353,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }
     };
 })(lib);
+
 (function(lib, undefined) {
     lib.array = {
         toArray: function toArray(object) {
@@ -568,6 +564,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }
     };
 })(lib);
+
 (function(lib, undefined) {
     lib.string = {
         trim: function trim(str) {
@@ -626,9 +623,14 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         
         camelToDash: function camelToDash(str) {
             return str.replace(/[A-Z]/g, function(match) { return "-" + match.toLowerCase(); });
+        },
+        
+        dashToCamel: function dashToCamer(str) {
+            return str.replace(/-(.)/g, function(match) { return match[1].toUpperCase(); });
         }
     };
 })(lib);
+
 (function(lib, undefined) {
     lib.date = {
         parseISOString: function parseISOString(str) {
@@ -662,6 +664,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }
     };
 })(lib);
+
 (function(lib, undefined) {
     lib.JSON = {
         parse: function parse(str) {
@@ -765,10 +768,11 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }
     };
 })(lib);
+
 (function(lib, undefined) {
     lib.dom = {
-        byId: function byId(id) {
-            return lib.document.getElementById(id);
+        byId: function byId(id, element) {
+            return (element || lib.document).getElementById(id);
         },
         
         byTag: function byTag(name, element) {
@@ -1047,6 +1051,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         [12, 2048]
     ]
 })(lib);
+
 (function(lib, undefined) {
     function NodeList(elements) {
         if (this == lib.dom) return new NodeList(elements);
@@ -1220,6 +1225,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     
     lib.dom.NodeList = NodeList;
 })(lib);
+
 ﻿(function(lib, undefined) {
     var event = {
         add: function(target, type, callback) {
@@ -1667,6 +1673,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }, 15);
     };
 })(lib);
+
 (function(lib, undefined) {
     if (lib.isDOMReady) return;
     
@@ -1731,6 +1738,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         throw new Error("Unable to bind lib ready listener to document.");
     }
 })(lib);
+
 (function(lib, undefined) {
     lib.dimensions = {
         CONTENT: 1,
@@ -1760,7 +1768,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         }
     };
 })(lib);
+
 if (!window.opera) try { document.execCommand("BackgroundImageCache", false, true); } catch(e) {};
+
 (function(lib, undefined) {
     lib.tween = {
         // http://st-on-it.blogspot.com/2011/05/calculating-cubic-bezier-function.html
@@ -1867,6 +1877,7 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
         }
     };
 })(lib);
+
 (function(lib, undefined) {
     function Widget(element) {
         this.__guid = lib.guid();
@@ -1915,7 +1926,13 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
     lib.extend(WidgetFactory.prototype, {
         run: function run(elements, properties) {
             var widget, name;
-            elements = lib.util.isArray(elements) ? lib.array.toArray(elements) : [elements];
+            if (lib.dom.isTypeOf(elements, lib.dom.ELEMENT_NODE | lib.dom.DOCUMENT_NODE) || elements == lib.window) {
+                elements = [elements];
+            } else if (elements) {
+                elements = lib.array.toArray(elements);
+            } else {
+                elements = [];
+            }
             lib.array.forEach(elements, lib.bind(function(element) {
                 widget = new this.widgetConstructor(element, properties);
                 if (widget.element) {
@@ -1996,6 +2013,7 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
     };
     
 })(lib);
+
 (function(lib, undefined) {
     lib.widget.helpers = {};
     
@@ -2039,6 +2057,7 @@ if (!window.opera) try { document.execCommand("BackgroundImageCache", false, tru
         }
     });
 })(lib);
+
 (function(lib, undefined) {
     function Model(object, element) {
         if (this == lib.widget) return new Model(object, element);
