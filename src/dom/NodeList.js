@@ -32,8 +32,6 @@
             return this;
         },
         
-        length: 0,
-        
         item: function item(index) {
             return this.items[index];
         },

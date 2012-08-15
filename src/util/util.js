@@ -4,8 +4,9 @@
     
     lib.util = {
         getType: function getType(object) {
-            var op = Object.prototype,
-                string = op.toString.call(object);
+            var op, string;
+            op = Object.prototype;
+            string = op.toString.call(object);
             if (object === null) {
                 return "null";
             } else if (object === undefined) {
@@ -27,7 +28,7 @@
             } else if (string === "[object RegExp]") {
                 return "RegExp";
             } else if (typeof object === "object") {
-                return this.getFunctionName(object.constructor);
+                return this.getConstructorName(object);
             }
         },
         
@@ -69,9 +70,21 @@
                 if (/^function (\S+?)\(/.test(name)) {
                     return RegExp.$1;
                 }
-            } else {
-                return null;
             }
+            return undefined;
+        },
+        
+        getConstructorName: function getConstructorName(object) {
+            if (object !== undefined && object.constructor) {
+                var name = this.getFunctionName(object.constructor);
+                if (name === undefined) {
+                    if (/\[object (\S+?)\]/.test(object.constructor.toString())) {
+                        name = RegExp.$1;
+                    }
+                }
+                return name;
+            }
+            return undefined;
         },
         
         inherits: function inherits(constructor, superConstructor) {

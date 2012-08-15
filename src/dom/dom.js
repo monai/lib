@@ -8,7 +8,8 @@
         },
         
         byTag: function byTag(name, element) {
-            return (element || lib.document).getElementsByTagName(name);
+            var elems = (element || lib.document).getElementsByTagName(name);
+            return lib.array.toArray(elems);
         },
         
         byQuery: function byQuery(query, element) {
@@ -16,7 +17,8 @@
         },
         
         byQueryAll: function byQueryAll(query, element) {
-            return (element || lib.document).querySelectorAll(query);
+            var elems = (element || lib.document).querySelectorAll(query);
+            return lib.array.toArray(elems);
         },
         
         byClass: function byClass(klass, tag, element) {
