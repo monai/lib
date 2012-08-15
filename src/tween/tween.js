@@ -2,6 +2,10 @@
     /*global lib*/
     "use strict";
     
+    var vendors, lastTime;
+    vendors = ["ms", "moz", "webkit", "o"];
+    lastTime = 0;
+    
     lib.tween = {
         // http://st-on-it.blogspot.com/2011/05/calculating-cubic-bezier-function.html
         Bezier: function Bezier(p1, p2, p3, p4) {
@@ -53,11 +57,43 @@
         },
         
         getRequestAnimationFrame: function getRequestAnimationFrame() {
-            return lib.window.requestAnimationFrame ||
-                   lib.window.mozRequestAnimationFrame ||
-                   lib.window.webkitRequestAnimationFrame ||
-                   lib.window.msRequestAnimationFrame ||
-                   lib.window.oRequestAnimationFrame;
+            var rAF;
+            rAF = lib.window.requestAnimationFrame;
+            for (var i = 0; i < vendors.length && !rAF; i++) {
+                rAF = lib.window[vendors[i] + "RequestAnimationFrame"];
+            }
+            
+            if (rAF) {
+                return rAF;
+            } else {
+                return function(callback) {
+                    var currTime, timeToCall, id;
+                    currTime = new Date().getTime();
+                    timeToCall = Math.max(0, 16 - (currTime - lastTime));
+                    id = lib.window.setTimeout(function() {
+                        callback(currTime + timeToCall);
+                    }, timeToCall);
+                    lastTime = currTime + timeToCall;
+                    return id;
+               }
+           }
+        },
+        
+        getCancelAnimationFrame: function getCancelAnimationFrame() {
+            var cAF;
+            cAF = lib.window.cancelAnimationFrame;
+            for (var i = 0; i < vendors.length && !cAF; i++) {
+                cAF = lib.window[vendors[i] + "CancelAnimationFrame"] ||
+                      lib.window[vendors[i] + "CancelRequestAnimationFrame"];
+            }
+            
+            if (rAF) {
+                return rAF;
+            } else {
+               return function(id) {
+                   lib.window.clearTimeout(id);
+               }
+           }
         },
         
         run: function run(from, to, duration, easing, stepCallback, endCallback) {
@@ -76,15 +112,13 @@
                 easingFunction = this.bezier.apply(this, this.easing.ease);
             }
             
-            function intervalFunction() {
+            function intervalFunction(time) {
                 /*jshint validthis:true */
                 var time, deltaTime, fraqTime, end, delta;
                 
                 if (!startTime) {
                     startTime = +new Date();
-                    if (requestAnimationFrame) {
-                        requestAnimationFrame(intervalFunction);
-                    }
+                    requestAnimationFrame(intervalFunction);
                     return;
                 }
                 
@@ -103,22 +137,13 @@
                     if (isFunctionEndCallback) {
                         endCallback.call(this, delta);
                     }
-                    if (!requestAnimationFrame) {
-                        lib.window.clearInterval(intervalHandle);
-                    }
                     return;
                 } else {
-                    if (requestAnimationFrame) {
-                        requestAnimationFrame(intervalFunction);
-                    }
+                    requestAnimationFrame(intervalFunction);
                 }
             }
             
-            if (requestAnimationFrame) {
-                requestAnimationFrame(intervalFunction);
-            } else {
-                intervalHandle = lib.window.setInterval(intervalFunction, 13);
-            }
+            requestAnimationFrame(intervalFunction);
         }
     };
 })(lib);
