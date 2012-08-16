@@ -92,7 +92,8 @@ module.exports = function(grunt) {
                 output_file: "dist/<%= pkg.name %>.min.js",
                 options: {
                     compilation_level: "ADVANCED_OPTIMIZATIONS",
-                    language_in: "ECMASCRIPT5_STRICT"
+                    language_in: "ECMASCRIPT5_STRICT",
+                    output_wrapper: "'(function(){%output%}).call(this);'"
                 }
             }
         }
