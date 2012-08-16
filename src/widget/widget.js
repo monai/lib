@@ -29,13 +29,11 @@
         },
         
         apply: function apply(method, args) {
-            var methodFunction;
-            
-            try {
-                methodFunction = this.__bound[method];
+            var methodFunction = this.__bound[method];
+            if (methodFunction) {
                 return methodFunction.apply(this, args);
-            } catch (e) {
-                throw new Error("method " + method + " isn't bound");
+            } else {
+                throw new Error("method " + method + " is not bound");
             }
         }
     });
