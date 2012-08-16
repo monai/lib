@@ -178,9 +178,11 @@
         
         getConstructorName: function getConstructorName(object) {
             if (object !== undefined && object.constructor) {
-                var name = this.getFunctionName(object.constructor);
+                var constructor, name;
+                constructor = object.thisConstructor || object.constructor;
+                name = this.getFunctionName(constructor);
                 if (name === undefined) {
-                    if (/\[object (\S+?)\]/.test(object.constructor.toString())) {
+                    if (/\[object (\S+?)\]/.test(constructor.toString())) {
                         name = RegExp.$1;
                     }
                 }
@@ -199,16 +201,26 @@
                         enumerable: false,
                         writable: true,
                         configurable: true
+                    },
+                    
+                    superConstructor: {
+                        value: superConstructor,
+                        enumerable: false,
+                        writable: true,
+                        configurable: true
                     }
                 });
             } else {
                 F.prototype = superConstructor.prototype;
-                constructor.prototype = new F();
+                constructor.prototype = new F(constructor, superConstructor);
             }
         }
     };
     
-    function F() {}
+    function F(thisConstructor, superConstructor) {
+        this.thisConstructor = thisConstructor;
+        this.superConstructor = superConstructor;
+    }
 })(lib);
 
 (function(lib, undefined) {
@@ -440,26 +452,36 @@
             return array;
         },
         
-        indexOf: function indexOf(array, object) {
-            for (var i = 0, len = array.length; i < len; i++) {
-                var found = lib.util.isArray(object) ?
-                            this.isEqual(array[i], object) : array[i] === object;
-                if (found) {
-                    return i;
+        indexOf: function indexOf(array, object, fromIndex) {
+            fromIndex = fromIndex || 0;
+            if ("indexOf" in Array.prototype) {
+                return Array.prototype.indexOf.call(array, object, fromIndex);
+            } else {
+                for (var i = fromIndex, len = array.length; i < len; i++) {
+                    var found = lib.util.isArray(object) ?
+                                this.isEqual(array[i], object) : array[i] === object;
+                    if (found) {
+                        return i;
+                    }
                 }
+                return -1;
             }
-            return -1;
         },
         
-        lastIndexOf: function lastIndexOf(array, object) {
-            for (var len = array.length, i = len - 1; i >= 0; i--) {
-                var found = lib.util.isArray(object) ?
-                            this.isEqual(array[i], object) : array[i] === object;
-                if (found) {
-                    return i;
+        lastIndexOf: function lastIndexOf(array, object, fromIndex) {
+            fromIndex = fromIndex || array.length;
+            if ("lastIndexOf" in Array.prototype) {
+                return Array.prototype.lastIndexOf.call(array, object, fromIndex);
+            } else {
+                for (var len = array.length, i = len - 1; i >= 0; i--) {
+                    var found = lib.util.isArray(object) ?
+                                this.isEqual(array[i], object) : array[i] === object;
+                    if (found) {
+                        return i;
+                    }
                 }
+                return -1;
             }
-            return -1;
         },
         
         inArray: function inArray(array, object) {
@@ -471,8 +493,8 @@
                 throw new TypeError(callback + " is not a function");
             }
             
-            if ("forEach" in array) {
-                array.forEach(callback, thisObject || lib.window);
+            if ("forEach" in Array.prototype) {
+                Array.prototype.forEach.call(array, callback, thisObject || lib.window);
             } else {
                 for (var i = 0, len = array.length; i < len; i++) {
                     callback.call(thisObject || lib.window, array[i], i, array);
@@ -485,8 +507,8 @@
                 throw new TypeError(callback + " is not a function");
             }
             
-            if ("every" in array) {
-                return array.every(callback, thisObject || lib.window);
+            if ("every" in Array.prototype) {
+                return Array.prototype.every.call(array, callback, thisObject || lib.window);
             } else {
                 for (var i = 0, len = array.length; i < len; i++) {
                     if (i in array && !callback.call(thisObject || lib.window, array[i], i, array)) {
@@ -502,8 +524,8 @@
                 throw new TypeError(callback + " is not a function");
             }
             
-            if ("some" in array) {
-                return array.some(callback, thisObject || lib.window);
+            if ("some" in Array.prototype) {
+                return Array.prototype.some.call(array, callback, thisObject || lib.window);
             } else {
                 for (var i = 0, len = array.length; i < len; i++) {
                     if (i in array && callback.call(thisObject || lib.window, array[i], i, array)) {
@@ -519,8 +541,8 @@
                 throw new TypeError(callback + " is not a function");
             }
             
-            if ("filter" in array) {
-                return array.filter(callback, thisObject || lib.window);
+            if ("filter" in Array.prototype) {
+                return Array.prototype.filter.call(array, callback, thisObject || lib.window);
             } else {
                 var out = [];
                 for (var i = 0, len = array.length; i < len; i++) {
@@ -539,8 +561,8 @@
                 throw new TypeError(callback + " is not a function");
             }
             
-            if ("map" in array) {
-                return array.map(callback, thisObject || lib.window);
+            if ("map" in Array.prototype) {
+                return Array.prototype.map.call(array, callback, thisObject || lib.window);
             } else {
                 var len = array.length,
                     out = new Array(len);
@@ -558,7 +580,7 @@
                 throw new TypeError(callback + " is not a function");
             }
             
-            if ("reduce" in array) {
+            if ("reduce" in Array.prototype) {
                 var args = initialValue ? [callback, initialValue] : [callback];
                 return Array.prototype.reduce.apply(array, args);
             } else {
@@ -586,7 +608,7 @@
                 throw new TypeError(callback + " is not a function");
             }
             
-            if ("reduceRight" in array) {
+            if ("reduceRight" in Array.prototype) {
                 var args = initialValue ? [callback, initialValue] : [callback];
                 return Array.prototype.reduceRight.apply(array, args);
             } else {
@@ -1571,13 +1593,13 @@
     "use strict";
     
     lib.dom = {
-        byId: function byId(id, element) {
-            return (element || lib.document).getElementById(id);
+        byId: function byId(id) {
+            return lib.document.getElementById(id);
         },
         
         byTag: function byTag(name, element) {
             var elems = (element || lib.document).getElementsByTagName(name);
-            return lib.array.toArray(elems);
+            return lib.dom.NodeList(elems);
         },
         
         byQuery: function byQuery(query, element) {
@@ -1586,7 +1608,7 @@
         
         byQueryAll: function byQueryAll(query, element) {
             var elems = (element || lib.document).querySelectorAll(query);
-            return lib.array.toArray(elems);
+            return lib.dom.NodeList(elems);
         },
         
         byClass: function byClass(klass, tag, element) {
@@ -1608,7 +1630,7 @@
                     }
                 }
                 
-                return returnElements;
+                return lib.dom.NodeList(returnElements);
             } else {
                 tag = tag || "*";
                 element = element || lib.document;
@@ -1636,7 +1658,7 @@
                         returnElements.push(node);
                     }
                     
-                    return returnElements;
+                    return lib.dom.NodeList(returnElements);
                 } else {
                     classes = klass.split(" ");
                     classesToCheck = [];
@@ -1660,7 +1682,7 @@
                         }
                     }
                     
-                    return returnElements;
+                    return lib.dom.NodeList(returnElements);
                 }
             }
         },
@@ -1756,10 +1778,12 @@
         },
         
         removeClass: function removeClass(element, klass) {
-            if (element.classList && element.classList.remove) {
-                element.classList.remove(klass);
-            } else {
-                element.className = element.className.replace(new RegExp("(^|\\s)" + klass + "(\\s|$)"), "$2");
+            if (this.hasClass(element, klass)) {
+                if (element.classList && element.classList.remove) {
+                    element.classList.remove(klass);
+                } else {
+                    element.className = element.className.replace(new RegExp("(^|\\s)" + klass + "(\\s|$)"), "$2");
+                }
             }
             return element;
         },
@@ -1892,25 +1916,23 @@
             return new NodeList(elements);
         }
         
-        this.items = [];
-        this.length = 0;
-        
         if (!elements) {
             return;
         }
         
         elements = lib.array.toArray(elements);
-        
-        for (var i = 0; i < elements.length; i++) {
-            if (elements[i].nodeType && lib.array.inArray([1, 9], elements[i].nodeType)) {
-                this.length = this.push(elements[i]);
+        lib.array.forEach(elements, lib.bind(function(elem) {
+            if (elem.nodeType && lib.array.inArray([1, 9], elem.nodeType)) {
+                this.push(elem);
             }
-        }
+        }, this));
     }
+    
+    lib.util.inherits(NodeList, Array);
     
     lib.extend(NodeList.prototype, {
         toString: function toString() {
-            return this.items.join(", ");
+            return this.join(", ");
         },
         
         valueOf: function valueOf() {
@@ -1918,150 +1940,103 @@
         },
         
         item: function item(index) {
-            return this.items[index];
+            return this[index];
         },
         
-        push: function push(node) {
-            return this.length = this.items.push(node);
-        },
-        
-        pop: function pop() {
-            var node = this.items.pop();
-            this.length = this.items.length;
-            return node;
-        },
-        
-        unshift: function unshift(node) {
-            return this.length = this.items.unshift(node);
-        },
-        
-        shift: function shift() {
-            var node = this.items.shift();
-            this.length = this.items.length;
-            return node;
-        },
-        
-        reverse: function reverse() {
-            this.items.reverse();
-            return this;
-        },
-        
-        sort: function sort(callback) {
-            this.items.sort(callback);
-            return this;
-        },
-        
-        splice: function splice() {
-            var out = Array.prototype.splice.apply(this.items, arguments);
-            clean.call(this);
-            this.length = this.items.length;
-            return new NodeList(out);
-        },
-        
+        /* array extensions */
         concat: function concat() {
-            var out = this.items;
-            for (var i = 0; i < arguments.length; i++) {
-                if (arguments[i] instanceof NodeList) {
-                    for (var j = 0; j < arguments[i].length; j++) {
-                        out.push(arguments[i].item(j));
-                    }
-                }
-            }
-            return new NodeList(out);
+            var args = lib.array.toArray(arguments);
+            lib.array.forEach(args, lib.bind(function(arg) {
+                lib.array.forEach(arg, lib.bind(function(elem) {
+                    this.push(elem);
+                }, this));
+            }, this));
         },
         
-        subtract: function subtract() {
-            var outPrev = this.items,
-                outCurr = [];
-            for (var i = 0; i < arguments.length; i++) {
-                if (arguments[i] instanceof NodeList) {
-                    for (var j = 0; j < outPrev.length; j++) {
-                        var found = false;
-                        for (var k = 0; k < arguments[i].length; k++) {
-                            if (outPrev[j] === arguments[i].item(k)) {
-                                found = true;
-                            }
-                        }
-                        if (!found) {
-                            outCurr.push(outPrev[j]);
-                        }
-                    }
-                    outPrev = outCurr;
-                    outCurr = [];
-                }
-            }
-            return new NodeList(outPrev);
-        },
-        
-        slice: function slice(begin, end) {
-            var out = this.items.slice(begin, end);
-            return new NodeList(out);
+        slice: function slice() {
+            return lib.dom.NodeList(Array.prototype.slice.apply(this, arguments));
         },
         
         toArray: function toArray() {
-            var out = new Array(this.items.length);
-            for (var i = 0; i < this.items.length; i++) {
-                out[i] = this.items[i];
-            }
-            return out;
+            return lib.array.toArray(this);
+        },
+        
+        indexOf: function indexOf(object, fromIndex) {
+            return lib.array.indexOf(this, object, fromIndex);
+        },
+        
+        lastIndexOf: function lastIndexOf(object, fromIndex) {
+            return lib.array.lastIndexOf(this, object, fromIndex);
+        },
+        
+        inArray: function inArray(object) {
+            return lib.array.inArray(this, object);
         },
         
         forEach: function forEach(callback, thisObject) {
-            lib.array.forEach(this.items, callback, thisObject);
+            lib.array.forEach(this, callback, thisObject);
         },
         
         every: function every(callback, thisObject) {
-            return lib.array.every(this.items, callback, thisObject);
+            return lib.array.every(this, callback, thisObject);
         },
         
         some: function some(callback, thisObject) {
-            return lib.array.some(this.items, callback, thisObject);
+            return lib.array.some(this, callback, thisObject);
         },
         
         filter: function filter(callback, thisObject) {
-            return lib.array.filter(this.items, callback, thisObject);
+            return lib.array.filter(this, callback, thisObject);
         },
         
         map: function map(callback, thisObject) {
-            return lib.array.map(this.items, callback, thisObject);
+            return lib.array.map(this, callback, thisObject);
         },
         
+        reduce: function reduce(callback, initialValue) {
+            return lib.array.reduce(this, callback, initialValue);
+        },
+        
+        reduceRight: function reduceRight(callback, initialValue) {
+            return lib.array.reduceRight(this, callback, initialValue);
+        },
+        
+        /* dom helpers */
         byTag: function byTag(tag) {
-            var out = [];
-            for (var i = 0; i < this.items.length; i++) {
-                var elems = lib.dom.byTag(tag, this.items[i]);
-                for (var j = 0; j < elems.length; j++) {
-                    out.push(elems[j]);
+            var out = lib.dom.NodeList();
+            this.forEach(function(elem) {
+                out.concat(lib.dom.byTag(tag, elem));
+            });
+            return out;
+        },
+        
+        byQuery: function byQuery(query) {
+            var out = null;
+            this.forEach(function(elem) {
+                if (!out) {
+                    out = lib.dom.byQuery(query, elem);
                 }
-            }
-            
-            return new NodeList(out);
+            });
+            return out;
+        },
+        
+        byQueryAll: function byQueryAll(query) {
+            var out = lib.dom.NodeList();
+            this.forEach(function(elem) {
+                out.concat(lib.dom.byQueryAll(query, elem));
+            });
+            return out;
         },
         
         byClass: function byClass(klass, tag) {
-            var out = [];
-            for (var i = 0; i < this.items.length; i++) {
-                var elems = lib.dom.byClass(klass, tag, this.items[i]);
-                for (var j = 0; j < elems.length; j++) {
-                    out.push(elems[j]);
-                }
-            }
-            
-            return new NodeList(out);
+            var out = lib.dom.NodeList();
+            this.forEach(function(elem) {
+                out.concat(lib.dom.byClass(klass, tag, elem));
+            });
+            return out;
         }
     });
-    
-    function clean() {
-        /*jshint validthis:true */
-        var out = [];
-        for (var i = 0; i < this.items.length; i++) {
-            if (this.items[i].nodeType && lib.array.inArray([1, 9], this.items[i].nodeType)) {
-                out.push(this.items[i]);
-            }
-        }
-        this.items = out;
-    }
-    
+        
     lib.dom.NodeList = NodeList;
 })(lib);
 
@@ -2741,13 +2716,11 @@ if (!window.opera) { try { document.execCommand("BackgroundImageCache", false, t
         },
         
         apply: function apply(method, args) {
-            var methodFunction;
-            
-            try {
-                methodFunction = this.__bound[method];
+            var methodFunction = this.__bound[method];
+            if (methodFunction) {
                 return methodFunction.apply(this, args);
-            } catch (e) {
-                throw new Error("method " + method + " isn't bound");
+            } else {
+                throw new Error("method " + method + " is not bound");
             }
         }
     });
