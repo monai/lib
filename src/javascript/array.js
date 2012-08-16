@@ -15,26 +15,36 @@
             return array;
         },
         
-        indexOf: function indexOf(array, object) {
-            for (var i = 0, len = array.length; i < len; i++) {
-                var found = lib.util.isArray(object) ?
-                            this.isEqual(array[i], object) : array[i] === object;
-                if (found) {
-                    return i;
+        indexOf: function indexOf(array, object, fromIndex) {
+            fromIndex = fromIndex || 0;
+            if ("indexOf" in Array.prototype) {
+                return Array.prototype.indexOf.call(array, object, fromIndex);
+            } else {
+                for (var i = fromIndex, len = array.length; i < len; i++) {
+                    var found = lib.util.isArray(object) ?
+                                this.isEqual(array[i], object) : array[i] === object;
+                    if (found) {
+                        return i;
+                    }
                 }
+                return -1;
             }
-            return -1;
         },
         
-        lastIndexOf: function lastIndexOf(array, object) {
-            for (var len = array.length, i = len - 1; i >= 0; i--) {
-                var found = lib.util.isArray(object) ?
-                            this.isEqual(array[i], object) : array[i] === object;
-                if (found) {
-                    return i;
+        lastIndexOf: function lastIndexOf(array, object, fromIndex) {
+            fromIndex = fromIndex || array.length;
+            if ("lastIndexOf" in Array.prototype) {
+                return Array.prototype.lastIndexOf.call(array, object, fromIndex);
+            } else {
+                for (var len = array.length, i = len - 1; i >= 0; i--) {
+                    var found = lib.util.isArray(object) ?
+                                this.isEqual(array[i], object) : array[i] === object;
+                    if (found) {
+                        return i;
+                    }
                 }
+                return -1;
             }
-            return -1;
         },
         
         inArray: function inArray(array, object) {
@@ -46,8 +56,8 @@
                 throw new TypeError(callback + " is not a function");
             }
             
-            if ("forEach" in array) {
-                array.forEach(callback, thisObject || lib.window);
+            if ("forEach" in Array.prototype) {
+                Array.prototype.forEach.call(array, callback, thisObject || lib.window);
             } else {
                 for (var i = 0, len = array.length; i < len; i++) {
                     callback.call(thisObject || lib.window, array[i], i, array);
@@ -60,8 +70,8 @@
                 throw new TypeError(callback + " is not a function");
             }
             
-            if ("every" in array) {
-                return array.every(callback, thisObject || lib.window);
+            if ("every" in Array.prototype) {
+                return Array.prototype.every.call(array, callback, thisObject || lib.window);
             } else {
                 for (var i = 0, len = array.length; i < len; i++) {
                     if (i in array && !callback.call(thisObject || lib.window, array[i], i, array)) {
@@ -77,8 +87,8 @@
                 throw new TypeError(callback + " is not a function");
             }
             
-            if ("some" in array) {
-                return array.some(callback, thisObject || lib.window);
+            if ("some" in Array.prototype) {
+                return Array.prototype.some.call(array, callback, thisObject || lib.window);
             } else {
                 for (var i = 0, len = array.length; i < len; i++) {
                     if (i in array && callback.call(thisObject || lib.window, array[i], i, array)) {
@@ -94,8 +104,8 @@
                 throw new TypeError(callback + " is not a function");
             }
             
-            if ("filter" in array) {
-                return array.filter(callback, thisObject || lib.window);
+            if ("filter" in Array.prototype) {
+                return Array.prototype.filter.call(array, callback, thisObject || lib.window);
             } else {
                 var out = [];
                 for (var i = 0, len = array.length; i < len; i++) {
@@ -114,8 +124,8 @@
                 throw new TypeError(callback + " is not a function");
             }
             
-            if ("map" in array) {
-                return array.map(callback, thisObject || lib.window);
+            if ("map" in Array.prototype) {
+                return Array.prototype.map.call(array, callback, thisObject || lib.window);
             } else {
                 var len = array.length,
                     out = new Array(len);
@@ -133,7 +143,7 @@
                 throw new TypeError(callback + " is not a function");
             }
             
-            if ("reduce" in array) {
+            if ("reduce" in Array.prototype) {
                 var args = initialValue ? [callback, initialValue] : [callback];
                 return Array.prototype.reduce.apply(array, args);
             } else {
@@ -161,7 +171,7 @@
                 throw new TypeError(callback + " is not a function");
             }
             
-            if ("reduceRight" in array) {
+            if ("reduceRight" in Array.prototype) {
                 var args = initialValue ? [callback, initialValue] : [callback];
                 return Array.prototype.reduceRight.apply(array, args);
             } else {
