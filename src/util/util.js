@@ -76,9 +76,11 @@
         
         getConstructorName: function getConstructorName(object) {
             if (object !== undefined && object.constructor) {
-                var name = this.getFunctionName(object.constructor);
+                var constructor, name;
+                constructor = object.thisConstructor || object.constructor;
+                name = this.getFunctionName(constructor);
                 if (name === undefined) {
-                    if (/\[object (\S+?)\]/.test(object.constructor.toString())) {
+                    if (/\[object (\S+?)\]/.test(constructor.toString())) {
                         name = RegExp.$1;
                     }
                 }
@@ -97,14 +99,24 @@
                         enumerable: false,
                         writable: true,
                         configurable: true
+                    },
+                    
+                    superConstructor: {
+                        value: superConstructor,
+                        enumerable: false,
+                        writable: true,
+                        configurable: true
                     }
                 });
             } else {
                 F.prototype = superConstructor.prototype;
-                constructor.prototype = new F();
+                constructor.prototype = new F(constructor, superConstructor);
             }
         }
     };
     
-    function F() {}
+    function F(thisConstructor, superConstructor) {
+        this.thisConstructor = thisConstructor;
+        this.superConstructor = superConstructor;
+    }
 })(lib);
