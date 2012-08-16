@@ -1,6 +1,5 @@
 {
   "name": "lib",
-  "version": "0.0.1",
   "description": "A JavaScript Library",
   "homepage": "http://github.com/monai/lib",
   "repository": {

@@ -78,6 +78,13 @@ module.exports = function(grunt) {
             }
         },
         
+        watch: {
+            dist: {
+                files: "<config:concat.dist.src>",
+                tasks: "concat:dist"
+            }
+        },
+        
         closureCompiler: {
             dist: {
                 closureCompiler: "build/google-compiler-20120710.jar",
