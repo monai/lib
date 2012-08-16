@@ -7,25 +7,23 @@
             return new NodeList(elements);
         }
         
-        this.items = [];
-        this.length = 0;
-        
         if (!elements) {
             return;
         }
         
         elements = lib.array.toArray(elements);
-        
-        for (var i = 0; i < elements.length; i++) {
-            if (elements[i].nodeType && lib.array.inArray([1, 9], elements[i].nodeType)) {
-                this.length = this.push(elements[i]);
+        lib.array.forEach(elements, lib.bind(function(elem) {
+            if (elem.nodeType && lib.array.inArray([1, 9], elem.nodeType)) {
+                this.push(elem);
             }
-        }
+        }, this));
     }
+    
+    lib.util.inherits(NodeList, Array);
     
     lib.extend(NodeList.prototype, {
         toString: function toString() {
-            return this.items.join(", ");
+            return this.join(", ");
         },
         
         valueOf: function valueOf() {
@@ -33,149 +31,102 @@
         },
         
         item: function item(index) {
-            return this.items[index];
+            return this[index];
         },
         
-        push: function push(node) {
-            return this.length = this.items.push(node);
-        },
-        
-        pop: function pop() {
-            var node = this.items.pop();
-            this.length = this.items.length;
-            return node;
-        },
-        
-        unshift: function unshift(node) {
-            return this.length = this.items.unshift(node);
-        },
-        
-        shift: function shift() {
-            var node = this.items.shift();
-            this.length = this.items.length;
-            return node;
-        },
-        
-        reverse: function reverse() {
-            this.items.reverse();
-            return this;
-        },
-        
-        sort: function sort(callback) {
-            this.items.sort(callback);
-            return this;
-        },
-        
-        splice: function splice() {
-            var out = Array.prototype.splice.apply(this.items, arguments);
-            clean.call(this);
-            this.length = this.items.length;
-            return new NodeList(out);
-        },
-        
+        /* array extensions */
         concat: function concat() {
-            var out = this.items;
-            for (var i = 0; i < arguments.length; i++) {
-                if (arguments[i] instanceof NodeList) {
-                    for (var j = 0; j < arguments[i].length; j++) {
-                        out.push(arguments[i].item(j));
-                    }
-                }
-            }
-            return new NodeList(out);
+            var args = lib.array.toArray(arguments);
+            lib.array.forEach(args, lib.bind(function(arg) {
+                lib.array.forEach(arg, lib.bind(function(elem) {
+                    this.push(elem);
+                }, this));
+            }, this));
         },
         
-        subtract: function subtract() {
-            var outPrev = this.items,
-                outCurr = [];
-            for (var i = 0; i < arguments.length; i++) {
-                if (arguments[i] instanceof NodeList) {
-                    for (var j = 0; j < outPrev.length; j++) {
-                        var found = false;
-                        for (var k = 0; k < arguments[i].length; k++) {
-                            if (outPrev[j] === arguments[i].item(k)) {
-                                found = true;
-                            }
-                        }
-                        if (!found) {
-                            outCurr.push(outPrev[j]);
-                        }
-                    }
-                    outPrev = outCurr;
-                    outCurr = [];
-                }
-            }
-            return new NodeList(outPrev);
-        },
-        
-        slice: function slice(begin, end) {
-            var out = this.items.slice(begin, end);
-            return new NodeList(out);
+        slice: function slice() {
+            return lib.dom.NodeList(Array.prototype.slice.apply(this, arguments));
         },
         
         toArray: function toArray() {
-            var out = new Array(this.items.length);
-            for (var i = 0; i < this.items.length; i++) {
-                out[i] = this.items[i];
-            }
-            return out;
+            return lib.array.toArray(this);
+        },
+        
+        indexOf: function indexOf(object, fromIndex) {
+            return lib.array.indexOf(this, object, fromIndex);
+        },
+        
+        lastIndexOf: function lastIndexOf(object, fromIndex) {
+            return lib.array.lastIndexOf(this, object, fromIndex);
+        },
+        
+        inArray: function inArray(object) {
+            return lib.array.inArray(this, object);
         },
         
         forEach: function forEach(callback, thisObject) {
-            lib.array.forEach(this.items, callback, thisObject);
+            lib.array.forEach(this, callback, thisObject);
         },
         
         every: function every(callback, thisObject) {
-            return lib.array.every(this.items, callback, thisObject);
+            return lib.array.every(this, callback, thisObject);
         },
         
         some: function some(callback, thisObject) {
-            return lib.array.some(this.items, callback, thisObject);
+            return lib.array.some(this, callback, thisObject);
         },
         
         filter: function filter(callback, thisObject) {
-            return lib.array.filter(this.items, callback, thisObject);
+            return lib.array.filter(this, callback, thisObject);
         },
         
         map: function map(callback, thisObject) {
-            return lib.array.map(this.items, callback, thisObject);
+            return lib.array.map(this, callback, thisObject);
         },
         
+        reduce: function reduce(callback, initialValue) {
+            return lib.array.reduce(this, callback, initialValue);
+        },
+        
+        reduceRight: function reduceRight(callback, initialValue) {
+            return lib.array.reduceRight(this, callback, initialValue);
+        },
+        
+        /* dom helpers */
         byTag: function byTag(tag) {
-            var out = [];
-            for (var i = 0; i < this.items.length; i++) {
-                var elems = lib.dom.byTag(tag, this.items[i]);
-                for (var j = 0; j < elems.length; j++) {
-                    out.push(elems[j]);
+            var out = lib.dom.NodeList();
+            this.forEach(function(elem) {
+                out.concat(lib.dom.byTag(tag, elem));
+            });
+            return out;
+        },
+        
+        byQuery: function byQuery(query) {
+            var out = null;
+            this.forEach(function(elem) {
+                if (!out) {
+                    out = lib.dom.byQuery(query, elem);
                 }
-            }
-            
-            return new NodeList(out);
+            });
+            return out;
+        },
+        
+        byQueryAll: function byQueryAll(query) {
+            var out = lib.dom.NodeList();
+            this.forEach(function(elem) {
+                out.concat(lib.dom.byQueryAll(query, elem));
+            });
+            return out;
         },
         
         byClass: function byClass(klass, tag) {
-            var out = [];
-            for (var i = 0; i < this.items.length; i++) {
-                var elems = lib.dom.byClass(klass, tag, this.items[i]);
-                for (var j = 0; j < elems.length; j++) {
-                    out.push(elems[j]);
-                }
-            }
-            
-            return new NodeList(out);
+            var out = lib.dom.NodeList();
+            this.forEach(function(elem) {
+                out.concat(lib.dom.byClass(klass, tag, elem));
+            });
+            return out;
         }
     });
-    
-    function clean() {
-        /*jshint validthis:true */
-        var out = [];
-        for (var i = 0; i < this.items.length; i++) {
-            if (this.items[i].nodeType && lib.array.inArray([1, 9], this.items[i].nodeType)) {
-                out.push(this.items[i]);
-            }
-        }
-        this.items = out;
-    }
-    
+        
     lib.dom.NodeList = NodeList;
 })(lib);

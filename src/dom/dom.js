@@ -3,13 +3,13 @@
     "use strict";
     
     lib.dom = {
-        byId: function byId(id, element) {
-            return (element || lib.document).getElementById(id);
+        byId: function byId(id) {
+            return lib.document.getElementById(id);
         },
         
         byTag: function byTag(name, element) {
             var elems = (element || lib.document).getElementsByTagName(name);
-            return lib.array.toArray(elems);
+            return lib.dom.NodeList(elems);
         },
         
         byQuery: function byQuery(query, element) {
@@ -18,7 +18,7 @@
         
         byQueryAll: function byQueryAll(query, element) {
             var elems = (element || lib.document).querySelectorAll(query);
-            return lib.array.toArray(elems);
+            return lib.dom.NodeList(elems);
         },
         
         byClass: function byClass(klass, tag, element) {
@@ -40,7 +40,7 @@
                     }
                 }
                 
-                return returnElements;
+                return lib.dom.NodeList(returnElements);
             } else {
                 tag = tag || "*";
                 element = element || lib.document;
@@ -68,7 +68,7 @@
                         returnElements.push(node);
                     }
                     
-                    return returnElements;
+                    return lib.dom.NodeList(returnElements);
                 } else {
                     classes = klass.split(" ");
                     classesToCheck = [];
@@ -92,7 +92,7 @@
                         }
                     }
                     
-                    return returnElements;
+                    return lib.dom.NodeList(returnElements);
                 }
             }
         },
@@ -188,10 +188,12 @@
         },
         
         removeClass: function removeClass(element, klass) {
-            if (element.classList && element.classList.remove) {
-                element.classList.remove(klass);
-            } else {
-                element.className = element.className.replace(new RegExp("(^|\\s)" + klass + "(\\s|$)"), "$2");
+            if (this.hasClass(element, klass)) {
+                if (element.classList && element.classList.remove) {
+                    element.classList.remove(klass);
+                } else {
+                    element.className = element.className.replace(new RegExp("(^|\\s)" + klass + "(\\s|$)"), "$2");
+                }
             }
             return element;
         },
