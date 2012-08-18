@@ -117,8 +117,7 @@
                 
                 if (!startTime) {
                     startTime = +new Date();
-                    requestAnimationFrame(intervalFunction);
-                    return;
+                    return requestAnimationFrame(intervalFunction);
                 }
                 
                 time = +new Date();
@@ -138,11 +137,11 @@
                     }
                     return;
                 } else {
-                    requestAnimationFrame(intervalFunction);
+                    return requestAnimationFrame(intervalFunction);
                 }
             }
             
-            requestAnimationFrame(intervalFunction);
+            return requestAnimationFrame(intervalFunction);
         }
     };
 })(lib);
