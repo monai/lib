@@ -21,7 +21,7 @@
     inspect = function inspect(object) {
         var o = [];
         for (var i in object) {
-            if (object.hasOwnProperty(i)) {
+            if (Object.prototype.hasOwnProperty.call(object, i)) {
                 o.push(i + ": " + object[i]);
             }
         }
@@ -1920,12 +1920,18 @@
             return;
         }
         
-        elements = lib.array.toArray(elements);
-        lib.array.forEach(elements, lib.bind(function(elem) {
-            if (elem.nodeType && lib.array.inArray([1, 9], elem.nodeType)) {
-                this.push(elem);
-            }
-        }, this));
+        if (lib.dom.isTypeOf(elements, lib.dom.ELEMENT_NODE | lib.dom.DOCUMENT_NODE)) {
+            this.push(elements);
+        } else if (elements instanceof NodeList) {
+            return elements;
+        } else {
+            elements = lib.array.toArray(elements);
+            lib.array.forEach(elements, lib.bind(function(element) {
+                if (lib.dom.isTypeOf(element, lib.dom.ELEMENT_NODE | lib.dom.DOCUMENT_NODE)) {
+                    this.push(element);
+                }
+            }, this));
+        }
     }
     
     lib.util.inherits(NodeList, Array);
@@ -2506,30 +2512,74 @@
     "use strict";
     
     lib.dimensions = {
-        CONTENT: 1,
-        BORDER: 2,
+        get: function get(element) {
+            var layoutViewport, scroll, rect;
+            scroll = this.scroll();
+
+            if (0 === arguments.length) {
+                /* backwards compatibility */
+                layoutViewport = this.layoutViewport();
+                return {
+                    innerWidth: layoutViewport.width,
+                    innerHeight: layoutViewport.height,
+                    scrollX: scroll.x,
+                    scrollY: scroll.y
+                }
+            } else if (element) {
+                rect = element.getBoundingClientRect();
+                return {
+                    width: rect.width || element.offsetWidth,
+                    height: rect.height || element.offsetHeight,
+                    left: rect.left + scroll.x,
+                    top: rect.top + scroll.y,
+                    right: rect.right + scroll.x,
+                    bottom: rect.bottom + scroll.y
+                };
+            }
+        },
         
-        get: function get(element, boxType) {
+        padding: function padding(element) {
+            return this.getPropertyDimensions(element, "padding-{0}");
+        },
+        
+        border: function border(element) {
+            return this.getPropertyDimensions(element, "border-{0}-width");
+        },
+        
+        margin: function margin(element) {
+            return this.getPropertyDimensions(element, "margin-{0}");
+        },
+        
+        getPropertyDimensions: function getPropertyDimensions(element, property) {
+            var i, l, props, prop, out;
+            props = ["left", "top", "right", "bottom"];
+            out = {};
+            for (i = 0, l = props.length; i < l; i++) {
+                prop = props[i];
+                out[prop] = parseInt(lib.dom.getStyle(element, lib.string.format(property, [prop])), 10);
+            }
+            return out;
+        },
+        
+        layoutViewport: function layoutViewport() {
             return {
-                innerWidth: lib.window.innerWidth || lib.document.documentElement.offsetWidth,
-                innerHeight: lib.window.innerHeight || lib.document.documentElement.offsetHeight,
-                scrollWidth: null,
-                scrollHeight: null,
-                scrollX: lib.window.scrollX || lib.document.documentElement.scrollLeft,
-                scrollY: lib.window.scrollY || lib.document.documentElement.scrollTop
+                width: lib.document.documentElement.clientWidth || document.body.clientWidth,
+                height: lib.document.documentElement.clientHeight || document.body.clientHeight
             };
         },
         
-        center: function center(element, referenceElement, direction) {
-            
+        visualViewport: function visualViewport() {
+            return {
+                width: lib.window.innerWidth || document.documentElement.offsetWidth,
+                height: lib.window.innerHeight || document.documentElement.offsetHeight
+            };
         },
         
-        centerVertical: function centerVertical(element, referenceElement) {
-            
-        },
-        
-        centerHorizontal: function centerHorizontal(element, referenceElement) {
-            
+        scroll: function scroll() {
+            return {
+                x: lib.window.scrollX || lib.document.documentElement.scrollLeft,
+                y: lib.window.scrollY || lib.document.documentElement.scrollTop
+            };
         }
     };
 })(lib);
@@ -2655,8 +2705,7 @@ if (!window.opera) { try { document.execCommand("BackgroundImageCache", false, t
                 
                 if (!startTime) {
                     startTime = +new Date();
-                    requestAnimationFrame(intervalFunction);
-                    return;
+                    return requestAnimationFrame(intervalFunction);
                 }
                 
                 time = +new Date();
@@ -2676,11 +2725,11 @@ if (!window.opera) { try { document.execCommand("BackgroundImageCache", false, t
                     }
                     return;
                 } else {
-                    requestAnimationFrame(intervalFunction);
+                    return requestAnimationFrame(intervalFunction);
                 }
             }
             
-            requestAnimationFrame(intervalFunction);
+            return requestAnimationFrame(intervalFunction);
         }
     };
 })(lib);
