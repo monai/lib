@@ -19,7 +19,7 @@
     inspect = function inspect(object) {
         var o = [];
         for (var i in object) {
-            if (object.hasOwnProperty(i)) {
+            if (Object.prototype.hasOwnProperty.call(object, i)) {
                 o.push(i + ": " + object[i]);
             }
         }
