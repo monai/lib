@@ -11,12 +11,18 @@
             return;
         }
         
-        elements = lib.array.toArray(elements);
-        lib.array.forEach(elements, lib.bind(function(elem) {
-            if (elem.nodeType && lib.array.inArray([1, 9], elem.nodeType)) {
-                this.push(elem);
-            }
-        }, this));
+        if (lib.dom.isTypeOf(elements, lib.dom.ELEMENT_NODE | lib.dom.DOCUMENT_NODE)) {
+            this.push(elements);
+        } else if (elements instanceof NodeList) {
+            return elements;
+        } else {
+            elements = lib.array.toArray(elements);
+            lib.array.forEach(elements, lib.bind(function(element) {
+                if (lib.dom.isTypeOf(element, lib.dom.ELEMENT_NODE | lib.dom.DOCUMENT_NODE)) {
+                    this.push(element);
+                }
+            }, this));
+        }
     }
     
     lib.util.inherits(NodeList, Array);
