@@ -775,6 +775,10 @@
         
         dashToCamel: function dashToCamer(str) {
             return str.replace(/-(.)/g, function(match) { return match[1].toUpperCase(); });
+        },
+        
+        capitalize: function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
         }
     };
 })(lib);
@@ -1622,12 +1626,13 @@
             
             if (lib.document.getElementsByClassName) {
                 elements = (element || lib.document).getElementsByClassName(klass);
-                nodeName = tag ? new RegExp("\\b" + tag + "\\b", "i") : null;
+                nodeName = tag && tag.toUpperCase();
                 returnElements = [];
                 for (i = 0; i < elements.length; i++) {
-                    if (!nodeName || nodeName.test(elements[i].nodeName)) {
-                        returnElements.push(elements[i]);
+                    if (nodeName && nodeName !== elements[i].nodeName) {
+                        continue;
                     }
+                    returnElements.push(elements[i]);
                 }
                 
                 return lib.dom.NodeList(returnElements);
@@ -1687,17 +1692,30 @@
             }
         },
         
-        parent: function parent(element, klass, name) {
-            /*jshint curly:false*/
+        parent: function parent(withElement, element, klass, name) {
+            /*jshint boss:true*/
             
-            klass = klass && new RegExp("(^|\\s)" + klass + "(\\s|$)");
+            if ("boolean" !== typeof withElement) {
+                name = klass;
+                klass = element;
+                element = withElement;
+                withElement = false;
+            }
+            
             name = name && name.toUpperCase();
             
-            while ((element = element.parentNode) &&
-                   (klass && !klass.test(element.className) ||
-                   name && name !== element.nodeName));
+            do {
+                if (!withElement) {
+                    withElement = true;
+                    continue;
+                }
+                
+                if (klass && this.hasClass(element, klass) || name === element.nodeName) {
+                    return element;
+                }
+            } while (element = element.parentNode);
             
-            return element;
+            return null;
         },
         
         isChild: function isChild(element, parent) {
@@ -1712,12 +1730,11 @@
         prev: function prev(element, klass, name) {
             /*jshint curly:false*/
             
-            klass = klass && new RegExp("(^|\\s)" + klass + "(\\s|$)");
             name = name && name.toUpperCase();
             
             while ((element = element.previousSibling) &&
                    (element.nodeType !== 1 ||
-                   klass && !klass.test(element.className) ||
+                   klass && !this.hasClass(element, klass) ||
                    name && name !== element.nodeName));
             
             return element;
@@ -1726,12 +1743,11 @@
         next: function next(element, klass, name) {
             /*jshint curly:false*/
             
-            klass = klass && new RegExp("(^|\\s)" + klass + "(\\s|$)");
             name = name && name.toUpperCase();
             
             while ((element = element.nextSibling) &&
                    (element.nodeType !== 1 ||
-                   klass && !klass.test(element.className) ||
+                   klass && !this.hasClass(element, klass) ||
                    name && name !== element.nodeName));
             
             return element;
@@ -2340,6 +2356,10 @@
             }
         },
         
+        preventDefault: function preventDefault(event) {
+            return event.preventDefault();
+        },
+        
         w3c: (document.addEventListener) ? true : false,
         ie: (document.attachEvent && !document.addEventListener) ? true : false,
         
@@ -2433,7 +2453,8 @@
     lib.event = {
         add: lib.bind(event.add, event),
         remove: lib.bind(event.remove, event),
-        dispatch: lib.bind(event.dispatch, event)
+        dispatch: lib.bind(event.dispatch, event),
+        preventDefault: lib.bind(event.preventDefault, event)
     };
 })(lib);
 
