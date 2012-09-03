@@ -32,12 +32,13 @@
             
             if (lib.document.getElementsByClassName) {
                 elements = (element || lib.document).getElementsByClassName(klass);
-                nodeName = tag ? new RegExp("\\b" + tag + "\\b", "i") : null;
+                nodeName = tag && tag.toUpperCase();
                 returnElements = [];
                 for (i = 0; i < elements.length; i++) {
-                    if (!nodeName || nodeName.test(elements[i].nodeName)) {
-                        returnElements.push(elements[i]);
+                    if (nodeName && nodeName !== elements[i].nodeName) {
+                        continue;
                     }
+                    returnElements.push(elements[i]);
                 }
                 
                 return lib.dom.NodeList(returnElements);
