@@ -136,12 +136,11 @@
         prev: function prev(element, klass, name) {
             /*jshint curly:false*/
             
-            klass = klass && new RegExp("(^|\\s)" + klass + "(\\s|$)");
             name = name && name.toUpperCase();
             
             while ((element = element.previousSibling) &&
                    (element.nodeType !== 1 ||
-                   klass && !klass.test(element.className) ||
+                   klass && !this.hasClass(element, klass) ||
                    name && name !== element.nodeName));
             
             return element;
@@ -150,12 +149,11 @@
         next: function next(element, klass, name) {
             /*jshint curly:false*/
             
-            klass = klass && new RegExp("(^|\\s)" + klass + "(\\s|$)");
             name = name && name.toUpperCase();
             
             while ((element = element.nextSibling) &&
                    (element.nodeType !== 1 ||
-                   klass && !klass.test(element.className) ||
+                   klass && !this.hasClass(element, klass) ||
                    name && name !== element.nodeName));
             
             return element;
