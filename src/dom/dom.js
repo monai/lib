@@ -97,17 +97,30 @@
             }
         },
         
-        parent: function parent(element, klass, name) {
-            /*jshint curly:false*/
+        parent: function parent(withElement, element, klass, name) {
+            /*jshint boss:true*/
             
-            klass = klass && new RegExp("(^|\\s)" + klass + "(\\s|$)");
+            if ("boolean" !== typeof withElement) {
+                name = klass;
+                klass = element;
+                element = withElement;
+                withElement = false;
+            }
+            
             name = name && name.toUpperCase();
             
-            while ((element = element.parentNode) &&
-                   (klass && !klass.test(element.className) ||
-                   name && name !== element.nodeName));
+            do {
+                if (!withElement) {
+                    withElement = true;
+                    continue;
+                }
+                
+                if (klass && this.hasClass(element, klass) || name === element.nodeName) {
+                    return element;
+                }
+            } while (element = element.parentNode);
             
-            return element;
+            return null;
         },
         
         isChild: function isChild(element, parent) {
