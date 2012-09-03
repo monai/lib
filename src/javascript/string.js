@@ -74,6 +74,10 @@
         
         dashToCamel: function dashToCamer(str) {
             return str.replace(/-(.)/g, function(match) { return match[1].toUpperCase(); });
+        },
+        
+        capitalize: function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
         }
     };
 })(lib);
