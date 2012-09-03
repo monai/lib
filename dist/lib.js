@@ -1710,12 +1710,13 @@
                     continue;
                 }
                 
-                if (klass && this.hasClass(element, klass) || name === element.nodeName) {
-                    return element;
+                if (klass && !this.hasClass(element, klass) || name && name !== element.nodeName) {
+                    continue;
+                } else {
+                    break;
                 }
             } while (element = element.parentNode);
-            
-            return null;
+            return element;
         },
         
         isChild: function isChild(element, parent) {
