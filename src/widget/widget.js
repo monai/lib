@@ -24,7 +24,6 @@
         call: function call(method) {
             var args = lib.array.toArray(arguments);
             args.shift();
-            args.shift();
             return this.apply(method, args);
         },
         
@@ -121,6 +120,12 @@
         Widget: Widget,
         
         create: function create(constructor, prototype) {
+            if (1 === arguments.length && lib.util.isObject(constructor)) {
+                prototype = constructor;
+                constructor = prototype.constructor;
+                delete prototype.constructor;
+            }
+            
             lib.util.inherits(constructor, Widget);
             lib.extend(constructor.prototype, lib.widget.helpers);
             lib.extend(constructor.prototype, prototype);
