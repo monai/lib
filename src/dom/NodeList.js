@@ -83,11 +83,11 @@
         },
         
         filter: function filter(callback, thisObject) {
-            return lib.array.filter(this, callback, thisObject);
+            return new NodeList(lib.array.filter(this, callback, thisObject));
         },
         
         map: function map(callback, thisObject) {
-            return lib.array.map(this, callback, thisObject);
+            return new NodeList(lib.array.map(this, callback, thisObject));
         },
         
         reduce: function reduce(callback, initialValue) {
