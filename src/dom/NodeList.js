@@ -51,7 +51,7 @@
         },
         
         slice: function slice() {
-            return lib.dom.NodeList(Array.prototype.slice.apply(this, arguments));
+            return new NodeList(Array.prototype.slice.apply(this, arguments));
         },
         
         toArray: function toArray() {
@@ -100,7 +100,7 @@
         
         /* dom helpers */
         byTag: function byTag(tag) {
-            var out = lib.dom.NodeList();
+            var out = new NodeList();
             this.forEach(function(elem) {
                 out.concat(lib.dom.byTag(tag, elem));
             });
@@ -118,7 +118,7 @@
         },
         
         byQueryAll: function byQueryAll(query) {
-            var out = lib.dom.NodeList();
+            var out = new NodeList();
             this.forEach(function(elem) {
                 out.concat(lib.dom.byQueryAll(query, elem));
             });
@@ -126,7 +126,7 @@
         },
         
         byClass: function byClass(klass, tag) {
-            var out = lib.dom.NodeList();
+            var out = new NodeList();
             this.forEach(function(elem) {
                 out.concat(lib.dom.byClass(klass, tag, elem));
             });
