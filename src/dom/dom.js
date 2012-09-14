@@ -223,21 +223,37 @@
             }
         },
         
-        getStyle: function getStyle(element, property, pseudoElement) {
-            var value = null, inline = false;
-            if (lib.window && lib.window.getComputedStyle) {
-                value = lib.window.getComputedStyle(element, pseudoElement || null)[property];
-            } else if (element.currentStyle) {
-                value = element.currentStyle[property];
-            } else {
-                value = element.style[property];
-                inline = true;
-            }
+        getStyle: function getStyle() {
+            return this.style.get.apply(this, arguments);
+        },
+        
+        style: {
+            get: function get(element, property, pseudoElement) {
+                var value = null, inline = false;
+                if (lib.window && lib.window.getComputedStyle) {
+                    value = lib.window.getComputedStyle(element, pseudoElement || null)[property];
+                } else if (element.currentStyle) {
+                    value = element.currentStyle[property];
+                } else {
+                    value = element.style[property];
+                    inline = true;
+                }
+                
+                if (!value && !inline) {
+                    return element.style[property];
+                } else {
+                    return value;
+                }
+            },
             
-            if (!value && !inline) {
-                return element.style[property];
-            } else {
-                return value;
+            set: function set(element, style) {
+                var rule, ruleProp;
+                for (rule in style) {
+                    if (style.hasOwnProperty(rule)) {
+                        ruleProp = lib.string.dashToCamel(rule);
+                        element.style[ruleProp] = style[rule];
+                    }
+                }
             }
         },
         
