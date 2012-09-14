@@ -45,7 +45,6 @@ module.exports = function(grunt) {
                     , "src/core/lib.js"
                     , "src/util/util.js"
                     , "src/util/Benchmark.js"
-                    , "src/util/Bindable.js"
                     , "src/javascript/object.js"
                     , "src/javascript/array.js"
                     , "src/javascript/string.js"
@@ -60,7 +59,6 @@ module.exports = function(grunt) {
                     , "src/tween/tween.js"
                     , "src/widget/widget.js"
                     , "src/widget/helpers.js"
-                    , "src/widget/Model.js"
                     ],
                 dest: "dist/<%= pkg.name %>.js"
             },
@@ -93,7 +91,7 @@ module.exports = function(grunt) {
                 options: {
                     compilation_level: "ADVANCED_OPTIMIZATIONS",
                     language_in: "ECMASCRIPT5_STRICT",
-                    output_wrapper: "'(function(){%output%}).call(this);'"
+                    output_wrapper: "'(function(undefined){%output%}).call(this);'"
                 }
             }
         }
