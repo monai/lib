@@ -131,6 +131,23 @@
                 out.concat(lib.dom.byClass(klass, tag, elem));
             });
             return out;
+        },
+        
+        find: function find(klass, tag) {
+            var nodeName, out;
+            out = this;
+            if (klass) {
+                out = out.filter(function(elem) {
+                    return lib.dom.hasClass(elem, klass);
+                });
+            }
+            if (tag) {
+                nodeName = tag && tag.toUpperCase();
+                out = out.filter(function(elem) {
+                    return nodeName === elem.nodeName;
+                });
+            }
+            return out;
         }
     });
         
