@@ -5,6 +5,9 @@
         if (window.console && window.console.log && window.console.log.apply) {
             window.console.log.apply(window.console, arguments);
         } else {
+            if (!log.output) {
+                log.output = [];
+            }
             log.output.push(lib.array.toArray(arguments).join(", "));
             window.clearTimeout(log.time);
             log.time = window.setTimeout(function() {
@@ -77,6 +80,9 @@
         },
         
         guid: function guid(object) {
+            if (!lib.guid.id) {
+                lib.guid.id = 1;
+            }
             if (!object) {
                 return ++lib.guid.id;
             }
@@ -86,9 +92,6 @@
             return object.__guid;
         }
     };
-    
-    lib.log.output = [];
-    lib.guid.id = 1;
     
     if (!window.lib) {
         window.lib = lib;
