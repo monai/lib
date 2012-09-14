@@ -9,7 +9,7 @@ module.exports = function(grunt) {
         pkg: "<json:package.json>",
         
         meta: {
-            banner: "/*! <%= pkg.name %> - <%= pkg.description %> - <%= pkg.homepage %> | License: <%= pkg.license %> */"
+            banner: "/*! <%= pkg.name %> - <%= pkg.description %> - <%= pkg.homepage %> | <%= pkg.license %> license */"
         },
         
         lint: {
