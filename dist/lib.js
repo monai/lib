@@ -2771,13 +2771,25 @@ if (!window.opera) { try { document.execCommand("BackgroundImageCache", false, t
         call: function call(element, method) {
             var args = lib.array.toArray(arguments);
             args.shift();
-            args.shift();
+            if (lib.util.isFunction(method)) {
+                args.shift();
+            } else {
+                if (method) {
+                    args.push(method);
+                }
+                method = null;
+            }
             return this.apply(element, method, args);
         },
         
         apply: function apply(element, method, args) {
-            var widget = lib.widget.get(element, this.name);
-            return widget.apply(method, args);
+            var widget;
+            if ("string" === typeof element && !method) {
+                return this.widgetConstructor[element].apply(this, args);
+            } else {
+                widget = lib.widget.get(element, this.name);
+                return widget.apply(method, args);
+            }
         }
     });
     
