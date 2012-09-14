@@ -255,11 +255,8 @@
         NOTATION_NODE: 2048,
         
         isDOMNode: function isDOMNode(element) {
-            if (!(lib.util.isObject(element) &&
-                ("nodeType" in element || typeof element.nodeType === "number"))) {
-                return false;
-            }
-            return element.nodeType > 0 && element.nodeType < 13;
+            var type = element && element.nodeType;
+            return type && element.nodeType > 0 && element.nodeType < 13;
         },
         
         isTypeOf: function isTypeOf(element, type) {
@@ -269,7 +266,7 @@
                 return;
             }
             for (var i = 0, len = nodeTypesMap.length; i < len; i++) {
-                if (element.nodeType === nodeTypesMap[i][0] && ((type | nodeTypesMap[i][1])) === type) {
+                if (element.nodeType === nodeTypesMap[i][0] && (type & nodeTypesMap[i][1])) {
                     return true;
                 }
             }
