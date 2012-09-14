@@ -1,4 +1,4 @@
-/*! lib - A JavaScript Library - http://github.com/monai/lib | License: MIT */
+/*! lib - A JavaScript Library - http://github.com/monai/lib | MIT license */
 
 (function(window, undefined) {
     "use strict";
@@ -7,6 +7,9 @@
         if (window.console && window.console.log && window.console.log.apply) {
             window.console.log.apply(window.console, arguments);
         } else {
+            if (!log.output) {
+                log.output = [];
+            }
             log.output.push(lib.array.toArray(arguments).join(", "));
             window.clearTimeout(log.time);
             log.time = window.setTimeout(function() {
@@ -79,6 +82,9 @@
         },
         
         guid: function guid(object) {
+            if (!lib.guid.id) {
+                lib.guid.id = 1;
+            }
             if (!object) {
                 return ++lib.guid.id;
             }
@@ -88,9 +94,6 @@
             return object.__guid;
         }
     };
-    
-    lib.log.output = [];
-    lib.guid.id = 1;
     
     if (!window.lib) {
         window.lib = lib;
@@ -257,133 +260,6 @@
     });
     
     lib.util.Benchmark = Benchmark;
-    
-})(lib);
-
-(function(lib, undefined) {
-    /*global lib*/
-    "use strict";
-    
-    function Bindable(value, element) {
-        if (this === lib.util) {
-            return new Bindable(value, element);
-        }
-        
-        this.__guid = lib.guid();
-        this._bound = {};
-        
-        if (arguments.length === 1 && lib.dom.isTypeOf(element, lib.dom.ELEMENT_NODE)) {
-            element = value;
-            value = undefined;
-        }
-        
-        this.value = value;
-        
-        if (element) {
-            this._element = element;
-            this._eventName = "__bindableChange" + this.__guid;
-        }
-    }
-    
-    lib.extend(Bindable.prototype, {
-        dispose: function dispose() {
-            this.unbind();
-        },
-        
-        toString: function toString() {
-            return "[object Bindable]";
-        },
-        
-        valueOf: function valueOf() {
-            return this.get();
-        },
-        
-        get: function get() {
-            return this.value;
-        },
-        
-        set: function set(value) {
-            var oldValue = this.value;
-            this.value = value;
-            
-            if (this._element) {
-                lib.event.dispatch(this._element, this._eventName, { value: this.value, oldValue: oldValue });
-            } else {
-                lib.bind(callAllBound, this)(this.value, oldValue);
-            }
-            
-            return this;
-        },
-        
-        bind: function bind(target, property) {
-            var id = lib.guid(),
-                bound = {
-                    id: id,
-                    target: null,
-                    proxy: null
-                };
-            
-            if (target && typeof property === "string") {
-                bound.target = [target, property];
-            } else if (lib.util.isFunction(target)) {
-                bound.target = target;
-            }
-            this._bound[id] = bound;
-            
-            if (this._element) {
-                bound.proxy = lib.bind(function(event) {
-                    lib.bind(callBound, this)(id, event.value, event.oldValue);
-                }, this);
-                lib.event.add(this._element, this._eventName, bound.proxy);
-            }
-        },
-        
-        unbind: function unbind(target, property) {
-            var bound = this._bound;
-            
-            for (var i in bound) {
-                if (bound.hasOwnProperty(i)) {
-                    var bTarget = bound[i].target,
-                        specificTarget = (bTarget === target ||
-                                          lib.util.isArray(bTarget) &&
-                                          bTarget[0] === target &&
-                                          bTarget[1] === property);
-                    
-                    if (specificTarget || !target) {
-                        if (this._element) {
-                            lib.event.remove(this._element, this._eventName, this._bound[i].proxy);
-                        }
-                        delete bound[i];
-                    }
-                    
-                    if (specificTarget) {
-                        break;
-                    }
-                }
-            }
-        }
-    });
-    
-    function callAllBound(value, oldValue) {
-        /*jshint validthis:true */
-        for (var i in this._bound) {
-            if (this._bound.hasOwnProperty(i)) {
-                callBound.call(this, i, value, oldValue);
-            }
-        }
-    }
-    
-    function callBound(id, value, oldValue) {
-        /*jshint validthis:true */
-        var bound = this._bound[id];
-        if (lib.util.isArray(bound.target)) {
-            bound.target[0][bound.target[1]] = value;
-        } else {
-            bound.target.call(this, value, oldValue);
-        }
-    }
-    
-    lib.util.Bindable = Bindable;
     
 })(lib);
 
@@ -1817,21 +1693,37 @@
             }
         },
         
-        getStyle: function getStyle(element, property, pseudoElement) {
-            var value = null, inline = false;
-            if (lib.window && lib.window.getComputedStyle) {
-                value = lib.window.getComputedStyle(element, pseudoElement || null)[property];
-            } else if (element.currentStyle) {
-                value = element.currentStyle[property];
-            } else {
-                value = element.style[property];
-                inline = true;
-            }
+        getStyle: function getStyle() {
+            return this.style.get.apply(this, arguments);
+        },
+        
+        style: {
+            get: function get(element, property, pseudoElement) {
+                var value = null, inline = false;
+                if (lib.window && lib.window.getComputedStyle) {
+                    value = lib.window.getComputedStyle(element, pseudoElement || null)[property];
+                } else if (element.currentStyle) {
+                    value = element.currentStyle[property];
+                } else {
+                    value = element.style[property];
+                    inline = true;
+                }
+                
+                if (!value && !inline) {
+                    return element.style[property];
+                } else {
+                    return value;
+                }
+            },
             
-            if (!value && !inline) {
-                return element.style[property];
-            } else {
-                return value;
+            set: function set(element, style) {
+                var rule, ruleProp;
+                for (rule in style) {
+                    if (style.hasOwnProperty(rule)) {
+                        ruleProp = lib.string.dashToCamel(rule);
+                        element.style[ruleProp] = style[rule];
+                    }
+                }
             }
         },
         
@@ -1849,11 +1741,8 @@
         NOTATION_NODE: 2048,
         
         isDOMNode: function isDOMNode(element) {
-            if (!(lib.util.isObject(element) &&
-                ("nodeType" in element || typeof element.nodeType === "number"))) {
-                return false;
-            }
-            return element.nodeType > 0 && element.nodeType < 13;
+            var type = element && element.nodeType;
+            return type && element.nodeType > 0 && element.nodeType < 13;
         },
         
         isTypeOf: function isTypeOf(element, type) {
@@ -1863,7 +1752,7 @@
                 return;
             }
             for (var i = 0, len = nodeTypesMap.length; i < len; i++) {
-                if (element.nodeType === nodeTypesMap[i][0] && ((type | nodeTypesMap[i][1])) === type) {
+                if (element.nodeType === nodeTypesMap[i][0] && (type & nodeTypesMap[i][1])) {
                     return true;
                 }
             }
@@ -1929,6 +1818,7 @@
     "use strict";
     
     function NodeList(elements) {
+        /*jshint bitwise:false*/
         if (this === lib.dom) {
             return new NodeList(elements);
         }
@@ -1977,7 +1867,7 @@
         },
         
         slice: function slice() {
-            return lib.dom.NodeList(Array.prototype.slice.apply(this, arguments));
+            return new NodeList(Array.prototype.slice.apply(this, arguments));
         },
         
         toArray: function toArray() {
@@ -2009,11 +1899,11 @@
         },
         
         filter: function filter(callback, thisObject) {
-            return lib.array.filter(this, callback, thisObject);
+            return new NodeList(lib.array.filter(this, callback, thisObject));
         },
         
         map: function map(callback, thisObject) {
-            return lib.array.map(this, callback, thisObject);
+            return new NodeList(lib.array.map(this, callback, thisObject));
         },
         
         reduce: function reduce(callback, initialValue) {
@@ -2026,7 +1916,7 @@
         
         /* dom helpers */
         byTag: function byTag(tag) {
-            var out = lib.dom.NodeList();
+            var out = new NodeList();
             this.forEach(function(elem) {
                 out.concat(lib.dom.byTag(tag, elem));
             });
@@ -2044,7 +1934,7 @@
         },
         
         byQueryAll: function byQueryAll(query) {
-            var out = lib.dom.NodeList();
+            var out = new NodeList();
             this.forEach(function(elem) {
                 out.concat(lib.dom.byQueryAll(query, elem));
             });
@@ -2052,10 +1942,27 @@
         },
         
         byClass: function byClass(klass, tag) {
-            var out = lib.dom.NodeList();
+            var out = new NodeList();
             this.forEach(function(elem) {
                 out.concat(lib.dom.byClass(klass, tag, elem));
             });
+            return out;
+        },
+        
+        find: function find(klass, tag) {
+            var nodeName, out;
+            out = this;
+            if (klass) {
+                out = out.filter(function(elem) {
+                    return lib.dom.hasClass(elem, klass);
+                });
+            }
+            if (tag) {
+                nodeName = tag && tag.toUpperCase();
+                out = out.filter(function(elem) {
+                    return nodeName === elem.nodeName;
+                });
+            }
             return out;
         }
     });
@@ -2782,7 +2689,6 @@ if (!window.opera) { try { document.execCommand("BackgroundImageCache", false, t
         call: function call(method) {
             var args = lib.array.toArray(arguments);
             args.shift();
-            args.shift();
             return this.apply(method, args);
         },
         
@@ -2879,6 +2785,12 @@ if (!window.opera) { try { document.execCommand("BackgroundImageCache", false, t
         Widget: Widget,
         
         create: function create(constructor, prototype) {
+            if (1 === arguments.length && lib.util.isObject(constructor)) {
+                prototype = constructor;
+                constructor = prototype.constructor;
+                delete prototype.constructor;
+            }
+            
             lib.util.inherits(constructor, Widget);
             lib.extend(constructor.prototype, lib.widget.helpers);
             lib.extend(constructor.prototype, prototype);
@@ -2942,118 +2854,4 @@ if (!window.opera) { try { document.execCommand("BackgroundImageCache", false, t
             lib.event.dispatch(this.element, type, args);
         }
     });
-})(lib);
-
-(function(lib, undefined) {
-    /*global lib*/
-    "use strict";
-    
-    function Model(object, element) {
-        if (this === lib.widget) {
-            return new Model(object, element);
-        }
-        if (!lib.util.isObject(object)) {
-            return;
-        }
-        
-        this.__guid = lib.guid();
-        this._bound = {};
-        
-        if (element && lib.dom.isTypeOf(element, lib.dom.ELEMENT_NODE)) {
-            this._element = element;
-            this._eventName = "__modelChange" + this.__guid;
-        }
-        
-        for (var prop in object) {
-            if (object.hasOwnProperty(prop)) {
-                var propBindable;
-                propBindable = this[prop] = this._element ?
-                                            lib.util.Bindable(object[prop], this._element) :
-                                            lib.util.Bindable(object[prop]);
-                propBindable.name = prop;
-                propBindable.model = this;
-                propBindable.bind(dispatcher);
-            }
-        }
-    }
-    
-    lib.extend(Model.prototype, {
-        dispose: function dispose() {
-            this.unbind();
-            for (var i in this) {
-                if (this[i] instanceof lib.util.Bindable) {
-                    this[i].dispose();
-                }
-            }
-        },
-        
-        bind: function bind(target) {
-            if (!lib.util.isFunction(target)) {
-                return;
-            }
-            
-            var id = lib.guid(),
-                bound = {
-                    id: id,
-                    target: target,
-                    proxy: null
-                };
-            this._bound[id] = bound;
-            
-            if (this._element) {
-                bound.proxy = lib.bind(function(event) {
-                    lib.bind(callBound, this)(id, event.value, event.oldValue, event.property);
-                }, this);
-                lib.event.add(this._element, this._eventName, bound.proxy);
-            }
-        },
-        
-        unbind: function unbind(target) {
-            var bound = this._bound;
-            
-            for (var i in bound) {
-                if (bound.hasOwnProperty(i)) {
-                    var specificTarget = (bound[i].target === target);
-                    if (specificTarget || !target) {
-                        if (this._element) {
-                            lib.event.remove(this._element, this._eventName, this._bound[i].proxy);
-                        }
-                        delete bound[i];
-                    }
-                    
-                    if (specificTarget) {
-                        break;
-                    }
-                }
-            }
-        }
-    });
-    
-    function dispatcher(value, oldValue) {
-        /*jshint validthis:true*/
-        var model = this.model;
-        if (model._element) {
-            lib.event.dispatch(model._element, model._eventName, { value: value, oldValue: oldValue, property: this.name });
-        } else {
-            callAllBound.call(model, value, oldValue, this.name);
-        }
-    }
-    
-    function callAllBound(value, oldValue, property) {
-        /*jshint validthis:true*/
-        for (var i in this._bound) {
-            if (this._bound.hasOwnProperty(i)) {
-                callBound.call(this, i, value, oldValue, property);
-            }
-        }
-    }
-    
-    function callBound(id, value, oldValue, property) {
-        /*jshint validthis:true*/
-        var bound = this._bound[id];
-        bound.target.call(this, value, oldValue, property);
-    }
-    
-    lib.widget.Model = Model;
-    
 })(lib);
