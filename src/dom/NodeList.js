@@ -3,6 +3,7 @@
     "use strict";
     
     function NodeList(elements) {
+        /*jshint bitwise:false*/
         if (this === lib.dom) {
             return new NodeList(elements);
         }
