@@ -1,4 +1,4 @@
-(function(lib, undefined) {
+n(lib, undefined) {
     /*global lib*/
     "use strict";
     
@@ -57,10 +57,7 @@
             }
             lib.array.forEach(elements, lib.bind(function(element) {
                 widget = new this.widgetConstructor(element, properties);
-                if (widget.element) {
-                    widget.element.__widgets = {};
-                    widget.element.__widgets[this.name] = widget;
-                }
+                this.elementize(widget, element);
                 this.items.push(widget);
                 this.length++;
             }, this));
@@ -78,25 +75,34 @@
             if (elementize) {
                 var element = lib.dom.create("<div>");
                 widget = new this.widgetConstructor(element, properties);
+                this.elementize(widget, element);
             } else {
                 widget = new this.widgetConstructor(null, properties);
             }
+            this.items.push(widget);
+            this.length++;
             return widget;
         },
         
         destroy: function destroy(widget) {
             for (var i = 0, l = this.items.length; i < l; i++) {
-                if (widget && widget !== this.items[i]) {
-                    continue;
+                if (widget === this.items[i]) {
+                    widget.dispose();
+                    var type = lib.util.getType(widget);
+                    if (widget.element && widget.element.__widgets) {
+                        delete widget.element.__widgets[type];
+                    }
+                    this.items.splice(i, 1);
+                    this.length--;
                 }
-                
-                widget.dispose();
-                
-                var type = lib.util.getType(widget);
-                delete widget.element.__widgets[type];
-                this.items.splice(i, 1);
-                this.length--;
             }
+        },
+        
+        elementize: function elementize(widget, element) {
+            if (!widget.element.__widgets) {
+                widget.element.__widgets = {};
+            }
+            widget.element.__widgets[this.name] = widget;
         },
         
         item: function item(n) {
