@@ -1,4 +1,4 @@
-n(lib, undefined) {
+(function(lib, undefined) {
     /*global lib*/
     "use strict";
     
