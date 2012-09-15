@@ -2722,10 +2722,7 @@ if (!window.opera) { try { document.execCommand("BackgroundImageCache", false, t
             }
             lib.array.forEach(elements, lib.bind(function(element) {
                 widget = new this.widgetConstructor(element, properties);
-                if (widget.element) {
-                    widget.element.__widgets = {};
-                    widget.element.__widgets[this.name] = widget;
-                }
+                this.elementize(widget, element);
                 this.items.push(widget);
                 this.length++;
             }, this));
@@ -2743,25 +2740,34 @@ if (!window.opera) { try { document.execCommand("BackgroundImageCache", false, t
             if (elementize) {
                 var element = lib.dom.create("<div>");
                 widget = new this.widgetConstructor(element, properties);
+                this.elementize(widget, element);
             } else {
                 widget = new this.widgetConstructor(null, properties);
             }
+            this.items.push(widget);
+            this.length++;
             return widget;
         },
         
         destroy: function destroy(widget) {
             for (var i = 0, l = this.items.length; i < l; i++) {
-                if (widget && widget !== this.items[i]) {
-                    continue;
+                if (widget === this.items[i]) {
+                    widget.dispose();
+                    var type = lib.util.getType(widget);
+                    if (widget.element && widget.element.__widgets) {
+                        delete widget.element.__widgets[type];
+                    }
+                    this.items.splice(i, 1);
+                    this.length--;
                 }
-                
-                widget.dispose();
-                
-                var type = lib.util.getType(widget);
-                delete widget.element.__widgets[type];
-                this.items.splice(i, 1);
-                this.length--;
             }
+        },
+        
+        elementize: function elementize(widget, element) {
+            if (!widget.element.__widgets) {
+                widget.element.__widgets = {};
+            }
+            widget.element.__widgets[this.name] = widget;
         },
         
         item: function item(n) {
@@ -2839,31 +2845,51 @@ if (!window.opera) { try { document.execCommand("BackgroundImageCache", false, t
         },
         
         _removeEvent: function _removeEvent(target, type, callback) {
-            lib.array.forEach(this.__events, function(event, i, array) {
-                var match = true, hit = false;
-                if (target) {
-                    match = (match && target === event[0]);
-                }
-                if (type) {
-                    match = (match && type === event[1]);
-                }
-                if (callback) {
-                    match = (match && callback === event[2]);
-                }
-                
-                if (match) {
-                    if (!hit) {
-                        hit = true;
-                        lib.event.remove(event[0], event[1], event[3]);
+            if (this.__events) {
+                lib.array.forEach(this.__events, function(event, i, array) {
+                    var match = true, hit = false;
+                    if (target) {
+                        match = (match && target === event[0]);
+                    }
+                    if (type) {
+                        match = (match && type === event[1]);
+                    }
+                    if (callback) {
+                        match = (match && callback === event[2]);
                     }
                     
-                    array.splice(i, 0);
-                }
-            });
+                    if (match) {
+                        if (!hit) {
+                            hit = true;
+                            lib.event.remove(event[0], event[1], event[3]);
+                        }
+                        
+                        array.splice(i, 0);
+                    }
+                });
+            }
         },
         
         _dispatchEvent: function _dispatchEvent(type, args) {
             lib.event.dispatch(this.element, type, args);
+        },
+        
+        _dispose: function _dispose() {
+            this._removeEvent();
+            if (this.element.__events) {
+                delete this.element.__events;
+            }
+        },
+        
+        _elementize: function _elementize(element) {
+            var type = lib.util.getType(this);
+            if (!element.__widgets) {
+                element.__widgets = {};
+            }
+            if (!element.__widgets[type]) {
+                element.__widgets[type] = this;
+                this.element = element;
+            }
         }
     });
 })(lib);
