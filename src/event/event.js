@@ -293,7 +293,8 @@
         },
         
         preventDefault: function preventDefault(event) {
-            return event.preventDefault();
+            event.preventDefault();
+            return false;
         },
         
         w3c: (document.addEventListener) ? true : false,
@@ -390,6 +391,6 @@
         add: lib.bind(event.add, event),
         remove: lib.bind(event.remove, event),
         dispatch: lib.bind(event.dispatch, event),
-        preventDefault: lib.bind(event.preventDefault, event)
+        preventDefault: event.preventDefault
     };
 })(lib);
