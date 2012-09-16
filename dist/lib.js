@@ -2265,7 +2265,8 @@
         },
         
         preventDefault: function preventDefault(event) {
-            return event.preventDefault();
+            event.preventDefault();
+            return false;
         },
         
         w3c: (document.addEventListener) ? true : false,
@@ -2362,7 +2363,7 @@
         add: lib.bind(event.add, event),
         remove: lib.bind(event.remove, event),
         dispatch: lib.bind(event.dispatch, event),
-        preventDefault: lib.bind(event.preventDefault, event)
+        preventDefault: event.preventDefault
     };
 })(lib);
 
@@ -2846,8 +2847,9 @@ if (!window.opera) { try { document.execCommand("BackgroundImageCache", false, t
         
         _removeEvent: function _removeEvent(target, type, callback) {
             if (this.__events) {
-                lib.array.forEach(this.__events, function(event, i, array) {
-                    var match = true, hit = false;
+                var events = this.__events;
+                lib.array.forEach(events, function(event, i) {
+                    var match = true;
                     if (target) {
                         match = (match && target === event[0]);
                     }
@@ -2859,13 +2861,12 @@ if (!window.opera) { try { document.execCommand("BackgroundImageCache", false, t
                     }
                     
                     if (match) {
-                        if (!hit) {
-                            hit = true;
-                            lib.event.remove(event[0], event[1], event[3]);
-                        }
-                        
-                        array.splice(i, 0);
+                        lib.event.remove(event[0], event[1], event[3]);
+                        events[i] = null;
                     }
+                });
+                this.__events = lib.array.filter(events, function(event) {
+                    return event !== null;
                 });
             }
         },
@@ -2876,9 +2877,10 @@ if (!window.opera) { try { document.execCommand("BackgroundImageCache", false, t
         
         _dispose: function _dispose() {
             this._removeEvent();
-            if (this.element.__events) {
-                delete this.element.__events;
+            if ("__events" in this) {
+                delete this.__events;
             }
+            delete this.element;
         },
         
         _elementize: function _elementize(element) {
