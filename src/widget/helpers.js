@@ -17,8 +17,9 @@
         
         _removeEvent: function _removeEvent(target, type, callback) {
             if (this.__events) {
-                lib.array.forEach(this.__events, function(event, i, array) {
-                    var match = true, hit = false;
+                var events = this.__events;
+                lib.array.forEach(events, function(event, i) {
+                    var match = true;
                     if (target) {
                         match = (match && target === event[0]);
                     }
@@ -30,13 +31,12 @@
                     }
                     
                     if (match) {
-                        if (!hit) {
-                            hit = true;
-                            lib.event.remove(event[0], event[1], event[3]);
-                        }
-                        
-                        array.splice(i, 0);
+                        lib.event.remove(event[0], event[1], event[3]);
+                        events[i] = null;
                     }
+                });
+                this.__events = lib.array.filter(events, function(event) {
+                    return event !== null;
                 });
             }
         },
@@ -47,9 +47,10 @@
         
         _dispose: function _dispose() {
             this._removeEvent();
-            if (this.element.__events) {
-                delete this.element.__events;
+            if ("__events" in this) {
+                delete this.__events;
             }
+            delete this.element;
         },
         
         _elementize: function _elementize(element) {
