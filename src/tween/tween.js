@@ -133,10 +133,6 @@
                 //delta = end ? to : delta <= to ? delta : to;
                 delta = end ? to : delta;
                 
-                if (isFunctionStepCallback) {
-                    stepCallback.call(this, delta);
-                }
-                
                 if (end) {
                     if (isFunctionEndCallback) {
                         endCallback.call(this, delta);
