@@ -2611,11 +2611,14 @@ if (!window.opera) { try { document.execCommand("BackgroundImageCache", false, t
         },
         
         run: function run(from, to, duration, easing, stepCallback, endCallback) {
-            var startTime,
-                easingFunction,
-                isFunctionStepCallback = lib.util.isFunction(stepCallback),
-                isFunctionEndCallback = lib.util.isFunction(endCallback),
-                requestAnimationFrame = this.getRequestAnimationFrame();
+            var startTime, easingFunction,
+                isFunctionStepCallback, isFunctionEndCallback, requestAnimationFrame,
+                rafPrevented, intervalFunction;
+                
+            isFunctionStepCallback = lib.util.isFunction(stepCallback);
+            isFunctionEndCallback = lib.util.isFunction(endCallback);
+            requestAnimationFrame = this.getRequestAnimationFrame();
+            rafPrevented = false;
             
             if (typeof easing === "string" && this.easing[easing]) {
                 easingFunction = this.bezier.apply(this, this.easing[easing]);
@@ -2625,13 +2628,14 @@ if (!window.opera) { try { document.execCommand("BackgroundImageCache", false, t
                 easingFunction = this.bezier.apply(this, this.easing.ease);
             }
             
-            function intervalFunction(time) {
+            (function intervalFunction() {
                 /*jshint validthis:true */
-                var deltaTime, fraqTime, end, delta;
+                var time, deltaTime, fraqTime, end, delta, rafHandle;
                 
                 if (!startTime) {
                     startTime = +new Date();
-                    return requestAnimationFrame(intervalFunction);
+                    requestAnimationFrame(intervalFunction);
+                    return;
                 }
                 
                 time = +new Date();
@@ -2642,20 +2646,24 @@ if (!window.opera) { try { document.execCommand("BackgroundImageCache", false, t
                 delta = from + delta;
                 //delta = end ? to : delta <= to ? delta : to;
                 delta = end ? to : delta;
-                if (isFunctionStepCallback) {
-                    stepCallback.call(this, delta);
-                }
+                
                 if (end) {
                     if (isFunctionEndCallback) {
                         endCallback.call(this, delta);
                     }
                     return;
                 } else {
-                    return requestAnimationFrame(intervalFunction);
+                    if (!rafPrevented) {
+                        rafHandle = requestAnimationFrame(intervalFunction);
+                    }
                 }
-            }
-            
-            return requestAnimationFrame(intervalFunction);
+                
+                if (isFunctionStepCallback) {
+                    rafPrevented = stepCallback.call(this, delta, rafHandle);
+                    rafPrevented = (undefined === rafPrevented) ? false : !rafPrevented;
+                }
+                
+            })();
         }
     };
 })(lib);
