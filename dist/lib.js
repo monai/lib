@@ -2464,6 +2464,22 @@
             }
         },
         
+        normalize: function normalize(dimensions, reference) {
+            var left, top, width, height;
+            left = dimensions.left - reference.left;
+            top = dimensions.top - reference.top;
+            width = dimensions.width;
+            height = dimensions.height;
+            return {
+                left: left,
+                top: top,
+                right: left + width,
+                bottom: top + height,
+                width: width,
+                height: height
+            }
+        },
+        
         padding: function padding(element) {
             return this.getPropertyDimensions(element, "padding-{0}");
         },
