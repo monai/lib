@@ -93,10 +93,6 @@
         }
     };
     
-    if (!window.lib) {
-        window.lib = lib;
-    }
-    if (!window.log) {
-        window.log = log;
-    }
+    window["lib"] = lib;
+    window["log"] = log;
 })(window);

@@ -85,11 +85,11 @@ module.exports = function(grunt) {
         
         closureCompiler: {
             dist: {
-                closureCompiler: "build/google-compiler-20120710.jar",
+                closureCompiler: "build/compiler.jar",
                 js: "<config:concat.dist.dest>",
                 output_file: "dist/<%= pkg.name %>.min.js",
                 options: {
-                    compilation_level: "ADVANCED_OPTIMIZATIONS",
+                    compilation_level: "SIMPLE_OPTIMIZATIONS",
                     language_in: "ECMASCRIPT5_STRICT",
                     output_wrapper: "'(function(undefined){%output%}).call(this);'"
                 }
@@ -102,32 +102,3 @@ module.exports = function(grunt) {
     // Default task.
     grunt.registerTask("default", "concat:dist closureCompiler concat:after");
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

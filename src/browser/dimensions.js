@@ -7,7 +7,7 @@
             var layoutViewport, scroll, rect;
             scroll = this.scroll();
 
-            if (0 === arguments.length) {
+            if ("undefined" === typeof element) {
                 /* backwards compatibility */
                 layoutViewport = this.layoutViewport();
                 return {

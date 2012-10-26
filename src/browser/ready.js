@@ -21,11 +21,11 @@
         
         // not an iframe...
         if (document.documentElement.doScroll && window === top) {
-            (function() {
+            (function callback() {
                 try {
                     document.documentElement.doScroll("left");
                 } catch(error) {
-                    setTimeout(arguments.callee, 0);
+                    setTimeout(callback, 0);
                     return;
                 }
                 
@@ -36,9 +36,9 @@
             // an iframe...
             document.attachEvent(
                 "onreadystatechange",
-                function() {
+                function callback() {
                     if (document.readyState === "complete") {
-                        document.detachEvent("onreadystatechange", arguments.callee);
+                        document.detachEvent("onreadystatechange", callback);
                         onReady();
                     }
                 }
@@ -46,19 +46,19 @@
         }
     } else if (document.readyState) {
         // like pre Safari
-        (function() {
+        (function callback() {
             if (/loaded|complete/.test(document.readyState)) {
                 onReady();
             } else {
-                setTimeout(arguments.callee, 0);
+                setTimeout(callback, 0);
             }
         })();
     } else if (document.addEventListener) {
         // like Mozilla, Opera and recent webkit
         document.addEventListener( 
             "DOMContentLoaded",
-            function() {
-                document.removeEventListener("DOMContentLoaded", arguments.callee, false);
+            function callback() {
+                document.removeEventListener("DOMContentLoaded", callback, false);
                 onReady();
             },
             false
