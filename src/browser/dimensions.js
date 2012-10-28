@@ -30,18 +30,28 @@
         },
         
         normalize: function normalize(dimensions, reference) {
-            var left, top, width, height;
-            left = dimensions.left - reference.left;
-            top = dimensions.top - reference.top;
-            width = dimensions.width;
-            height = dimensions.height;
-            return {
-                left: left,
-                top: top,
-                right: left + width,
-                bottom: top + height,
-                width: width,
-                height: height
+            var refLeft, refTop, left, top, width, height;
+            refLeft = ("x" in reference) ? reference.x : reference.left;
+            refTop = ("y" in reference) ? reference.y : reference.top;
+            
+            if ("x" in dimensions && "y" in dimensions) {
+                return {
+                    x: dimensions.x - refLeft,
+                    y: dimensions.y - refTop
+                }
+            } else {
+                left = dimensions.left - refLeft;
+                top = dimensions.top - refTop;
+                width = dimensions.width;
+                height = dimensions.height;
+                return {
+                    left: left,
+                    top: top,
+                    right: left + width,
+                    bottom: top + height,
+                    width: width,
+                    height: height
+                }
             }
         },
         
