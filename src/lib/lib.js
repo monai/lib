@@ -1,25 +1,37 @@
 (function(window, undefined) {
     "use strict";
     
-    var log = function log() {
+    var lib, readyQueue;
+    
+    function log() {
         if (window.console && window.console.log && window.console.log.apply) {
             window.console.log.apply(window.console, arguments);
         } else {
+            var args, l;
+            
             if (!log.output) {
                 log.output = [];
             }
-            log.output.push(lib.array.toArray(arguments).join(", "));
-            window.clearTimeout(log.time);
-            log.time = window.setTimeout(function() {
+            
+            l = arguments.length;
+            args = new Array(l);
+            while (l--) {
+                args[l] = arguments[l];
+            }
+            args = args.join(", ");
+
+            log.output.push(args);
+            window.clearTimeout(log.timer);
+            log.timer = window.setTimeout(function () {
                 var t = log.output.join("\r\n");
                 log.output = [];
                 alert(t);
             }, 1000);
         }
         return arguments[0];
-    },
+    }
     
-    inspect = function inspect(object) {
+    function inspect(object) {
         var o = [];
         for (var i in object) {
             if (Object.prototype.hasOwnProperty.call(object, i)) {
@@ -27,7 +39,9 @@
             }
         }
         return o.join("\r\n");
-    },
+    }
+    
+    readyQueue = [];
     
     lib = {
         log: log,
@@ -40,20 +54,18 @@
         
         isReady: false,
         
-        isDOMReady: false,
-        
-        ready: function ready(callback, dom) {
+        ready: function ready(callback) {
             if (callback === undefined) {
-                lib.isReady = true;
-                lib.event.dispatch(lib.document, "libReady");
-                lib.event.remove(lib.document, "libReady");
+                this.isReady = true;
+                for (var i = 0, l = readyQueue.length; i < l; i++) {
+                    readyQueue[i].call(this.window);
+                }
+                readyQueue = [];
             } else if (typeof callback === "function") {
-                if (!lib.isReady && !dom) {
-                    lib.event.add(lib.document, "libReady", lib.bind(callback, lib.window));
-                } else if (!lib.isDOMReady && dom) {
-                    lib.event.add(lib.document, "DOMReady", lib.bind(callback, lib.window));
+                if (!this.isReady) {
+                    readyQueue.push(callback);
                 } else {
-                    callback();
+                    callback.call(this.window);
                 }
             }
         },

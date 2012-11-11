@@ -11,7 +11,7 @@
             } else {
                 str = str.replace(/^\s\s*/, "");
                 var i = str.length;
-                while (/\s/.test(str.charAt(--i)));
+                while (/\s/.test(str.charAt(--i))) {};
                 return str.slice(0, i + 1);
             }
         },
@@ -31,7 +31,7 @@
                 return String.trimRight(str);
             } else {
                 var i = str.length;
-                while (/\s/.test(str.charAt(--i)));
+                while (/\s/.test(str.charAt(--i))) {};
                 return str.slice(0, i + 1);
             }
         },

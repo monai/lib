@@ -3,25 +3,37 @@
 (function(window, undefined) {
     "use strict";
     
-    var log = function log() {
+    var lib, readyQueue;
+    
+    function log() {
         if (window.console && window.console.log && window.console.log.apply) {
             window.console.log.apply(window.console, arguments);
         } else {
+            var args, l;
+            
             if (!log.output) {
                 log.output = [];
             }
-            log.output.push(lib.array.toArray(arguments).join(", "));
-            window.clearTimeout(log.time);
-            log.time = window.setTimeout(function() {
+            
+            l = arguments.length;
+            args = new Array(l);
+            while (l--) {
+                args[l] = arguments[l];
+            }
+            args = args.join(", ");
+
+            log.output.push(args);
+            window.clearTimeout(log.timer);
+            log.timer = window.setTimeout(function () {
                 var t = log.output.join("\r\n");
                 log.output = [];
                 alert(t);
             }, 1000);
         }
         return arguments[0];
-    },
+    }
     
-    inspect = function inspect(object) {
+    function inspect(object) {
         var o = [];
         for (var i in object) {
             if (Object.prototype.hasOwnProperty.call(object, i)) {
@@ -29,7 +41,9 @@
             }
         }
         return o.join("\r\n");
-    },
+    }
+    
+    readyQueue = [];
     
     lib = {
         log: log,
@@ -42,20 +56,18 @@
         
         isReady: false,
         
-        isDOMReady: false,
-        
-        ready: function ready(callback, dom) {
+        ready: function ready(callback) {
             if (callback === undefined) {
-                lib.isReady = true;
-                lib.event.dispatch(lib.document, "libReady");
-                lib.event.remove(lib.document, "libReady");
+                this.isReady = true;
+                for (var i = 0, l = readyQueue.length; i < l; i++) {
+                    readyQueue[i].call(this.window);
+                }
+                readyQueue = [];
             } else if (typeof callback === "function") {
-                if (!lib.isReady && !dom) {
-                    lib.event.add(lib.document, "libReady", lib.bind(callback, lib.window));
-                } else if (!lib.isDOMReady && dom) {
-                    lib.event.add(lib.document, "DOMReady", lib.bind(callback, lib.window));
+                if (!this.isReady) {
+                    readyQueue.push(callback);
                 } else {
-                    callback();
+                    callback.call(this.window);
                 }
             }
         },
@@ -584,7 +596,7 @@
             } else {
                 str = str.replace(/^\s\s*/, "");
                 var i = str.length;
-                while (/\s/.test(str.charAt(--i)));
+                while (/\s/.test(str.charAt(--i))) {};
                 return str.slice(0, i + 1);
             }
         },
@@ -604,7 +616,7 @@
                 return String.trimRight(str);
             } else {
                 var i = str.length;
-                while (/\s/.test(str.charAt(--i)));
+                while (/\s/.test(str.charAt(--i))) {};
                 return str.slice(0, i + 1);
             }
         },
@@ -1608,7 +1620,7 @@
             while ((element = element.previousSibling) &&
                    (element.nodeType !== 1 ||
                    klass && !this.hasClass(element, klass) ||
-                   name && name !== element.nodeName));
+                   name && name !== element.nodeName)) {};
             
             return element;
         },
@@ -1621,7 +1633,7 @@
             while ((element = element.nextSibling) &&
                    (element.nodeType !== 1 ||
                    klass && !this.hasClass(element, klass) ||
-                   name && name !== element.nodeName));
+                   name && name !== element.nodeName)) {};
             
             return element;
         },
@@ -2364,76 +2376,6 @@
 })(lib);
 
 (function(lib, undefined) {
-    /*jshint noarg:false, strict: false*/
-    /*global lib*/
-    
-    if (lib.isDOMReady) {
-        return;
-    }
-    
-    function onReady() {
-        if (!lib.isDOMReady) {
-            lib.isDOMReady = true;
-            lib.event.dispatch(document, "DOMReady", { safe: true });
-            lib.event.remove(lib.document, "libReady");
-        }
-    }
-    
-    if (document.readyState === "complete") { // already here!
-        onReady();
-    } else if (!window.opera && document.attachEvent) {
-        // like IE
-        
-        // not an iframe...
-        if (document.documentElement.doScroll && window === top) {
-            (function callback() {
-                try {
-                    document.documentElement.doScroll("left");
-                } catch(error) {
-                    setTimeout(callback, 0);
-                    return;
-                }
-                
-                // and execute any waiting functions
-                onReady();
-            })();
-        } else {
-            // an iframe...
-            document.attachEvent(
-                "onreadystatechange",
-                function callback() {
-                    if (document.readyState === "complete") {
-                        document.detachEvent("onreadystatechange", callback);
-                        onReady();
-                    }
-                }
-            );
-        }
-    } else if (document.readyState) {
-        // like pre Safari
-        (function callback() {
-            if (/loaded|complete/.test(document.readyState)) {
-                onReady();
-            } else {
-                setTimeout(callback, 0);
-            }
-        })();
-    } else if (document.addEventListener) {
-        // like Mozilla, Opera and recent webkit
-        document.addEventListener( 
-            "DOMContentLoaded",
-            function callback() {
-                document.removeEventListener("DOMContentLoaded", callback, false);
-                onReady();
-            },
-            false
-        );
-    } else {
-        throw new Error("Unable to bind lib ready listener to document.");
-    }
-})(lib);
-
-(function(lib, undefined) {
     /*global lib*/
     "use strict";
     
@@ -2535,8 +2477,6 @@
         }
     };
 })(lib);
-
-if (!window.opera) { try { document.execCommand("BackgroundImageCache", false, true); } catch(e) {} }
 
 (function(lib, undefined) {
     /*global lib*/

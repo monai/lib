@@ -12,50 +12,22 @@ module.exports = function(grunt) {
             banner: "/*! <%= pkg.name %> - <%= pkg.description %> - <%= pkg.homepage %> | <%= pkg.license %> license */"
         },
         
-        lint: {
-            files: ["grunt.js", "src/**/*.js"]
-        },
-        
-        jshint: {
-            options: {
-                forin: true,
-                noarg: true,
-                noempty: true,
-                eqeqeq: true,
-                bitwise: true,
-                strict: true,
-                undef: true,
-                unused: true,
-                curly: true,
-                browser: true,
-                devel: true,
-                indent: 4
-            },
-            
-            globals: {
-                lib: true,
-                log: true
-            }
-        },
-        
         concat: {
             dist: {
                 src: [
                       "<banner:meta.banner>"
-                    , "src/core/lib.js"
+                    , "src/lib/lib.js"
                     , "src/util/util.js"
                     , "src/util/Benchmark.js"
-                    , "src/javascript/object.js"
-                    , "src/javascript/array.js"
-                    , "src/javascript/string.js"
-                    , "src/javascript/date.js"
-                    , "src/javascript/JSON.js"
+                    , "src/lang/object.js"
+                    , "src/lang/array.js"
+                    , "src/lang/string.js"
+                    , "src/lang/date.js"
+                    , "src/JSON/JSON.js"
                     , "src/dom/dom.js"
                     , "src/dom/NodeList.js"
                     , "src/event/event.js"
-                    , "src/browser/ready.js"
-                    , "src/browser/dimensions.js"
-                    , "src/browser/ie.js"
+                    , "src/dimensions/dimensions.js"
                     , "src/tween/tween.js"
                     , "src/widget/widget.js"
                     , "src/widget/helpers.js"

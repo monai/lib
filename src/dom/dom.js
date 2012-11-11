@@ -142,7 +142,7 @@
             while ((element = element.previousSibling) &&
                    (element.nodeType !== 1 ||
                    klass && !this.hasClass(element, klass) ||
-                   name && name !== element.nodeName));
+                   name && name !== element.nodeName)) {};
             
             return element;
         },
@@ -155,7 +155,7 @@
             while ((element = element.nextSibling) &&
                    (element.nodeType !== 1 ||
                    klass && !this.hasClass(element, klass) ||
-                   name && name !== element.nodeName));
+                   name && name !== element.nodeName)) {};
             
             return element;
         },
