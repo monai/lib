@@ -23,7 +23,6 @@ module.exports = function(grunt) {
                     , "src/lang/array.js"
                     , "src/lang/string.js"
                     , "src/lang/date.js"
-                    , "src/JSON/JSON.js"
                     , "src/dom/dom.js"
                     , "src/dom/NodeList.js"
                     , "src/event/event.js"
