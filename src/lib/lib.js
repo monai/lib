@@ -99,7 +99,7 @@
                 return ++lib.guid.id;
             }
             if (!object.__guid) {
-                object.__guid = lib.guid.id++;
+                object.__guid = ++lib.guid.id;
             }
             return object.__guid;
         }
