@@ -7,26 +7,18 @@
             var op, string;
             op = Object.prototype;
             string = op.toString.call(object);
-            if (object === null) {
-                return "null";
-            } else if (object === undefined) {
+            if (object === undefined) {
                 return "undefined";
+            } else if (object === null) {
+                return "null";
             } else if (object === true || object === false) {
                 return "boolean";
-            } else if (string === "[object Array]") {
-                return "Array";
+            } else if (typeof object === "string") {
+                return "string";
+            } else if (typeof object === "number") {
+                return "number";
             } else if (string === "[object Arguments]" || !!(op.hasOwnProperty.call(object, "callee"))) {
                 return "Arguments";
-            } else if (string === "[object Function]") {
-                return "Function";
-            } else if (string === "[object String]") {
-                return "String";
-            } else if (string === "[object Number]") {
-                return "Number";
-            } else if (string === "[object Date]") {
-                return "Date";
-            } else if (string === "[object RegExp]") {
-                return "RegExp";
             } else if (typeof object === "object") {
                 return this.getConstructorName(object);
             }
@@ -75,7 +67,7 @@
         },
         
         getConstructorName: function getConstructorName(object) {
-            if (object !== undefined && object.constructor) {
+            if (object && object.constructor) {
                 var constructor, name;
                 constructor = object.thisConstructor || object.constructor;
                 name = this.getFunctionName(constructor);
