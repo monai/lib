@@ -19,7 +19,7 @@
                 return "number";
             } else if (string === "[object Arguments]" || !!(op.hasOwnProperty.call(object, "callee"))) {
                 return "Arguments";
-            } else if (typeof object === "object") {
+            } else {
                 return this.getConstructorName(object);
             }
         },
@@ -57,11 +57,9 @@
         },
         
         getFunctionName: function getFunctionName(func) {
-            if (this.isFunction(func)) {
-                var name = func.toString();
-                if (/^function (\S+?)\(/m.test(name)) {
-                    return RegExp.$1;
-                }
+            var name = func.toString();
+            if (/^function (\S+?)\(/m.test(name)) {
+                return RegExp.$1;
             }
             return undefined;
         },
