@@ -169,17 +169,17 @@
         },
         
         remove: function remove(element) {
-            var p = this.parent(element);
+            var p = element.parentNode;
             return p && p.removeChild(element);
         },
         
         before: function before(element, ref) {
-            var p = this.parent(ref);
+            var p = ref.parentNode;
             return p && p.insertBefore(element, ref);
         },
         
         after: function after(element, ref) {
-            var p = this.parent(ref);
+            var p = ref.parentNode;
             return p && p.insertBefore(element, ref.nextSibling);
         },
         
