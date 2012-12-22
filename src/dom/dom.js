@@ -45,56 +45,29 @@
             } else {
                 tag = tag || "*";
                 element = element || lib.document;
+                classes = klass.split(" ");
+                classesToCheck = [];
+                elements = (tag === "*" && element.all) ? element.all : element.getElementsByTagName(tag);
+                returnElements = [];
                 
-                if (lib.document.evaluate) {
-                    classes = klass.split(" ");
-                    classesToCheck = "";
-                    xhtmlNamespace = "http://www.w3.org/1999/xhtml";
-                    namespaceResolver = (lib.document.documentElement.namespaceURI === xhtmlNamespace) ?
-                                            xhtmlNamespace : null;
-                    returnElements = [];
-                    
-                    for (i = 0; i < classes.length; i++) {
-                        classesToCheck += "[contains(concat(' ', @class, ' '), ' " + classes[i] + " ')]";
-                    }
-                    
-                    try {
-                        elements = lib.document.evaluate(".//" + tag + classesToCheck, element, namespaceResolver, 0, null);
-                    } catch (e) {
-                        elements = lib.document.evaluate(".//" + tag + classesToCheck, element, null, 0, null);
-                    }
-                    
-                    /*jshint boss:true*/
-                    while (node = elements.iterateNext()) {
-                        returnElements.push(node);
-                    }
-                    
-                    return lib.dom.NodeList(returnElements);
-                } else {
-                    classes = klass.split(" ");
-                    classesToCheck = [];
-                    elements = (tag === "*" && element.all) ? element.all : element.getElementsByTagName(tag);
-                    returnElements = [];
-                    
-                    for (i = 0; i < classes.length; i++) {
-                        classesToCheck.push(new RegExp("(^|\\s)" + classes[i] + "(\\s|$)"));
-                    }
-                    
-                    for (i = 0; i < elements.length; i++) {
-                        match = false;
-                        for (var j = 0; j < classesToCheck.length; j++){
-                            match = classesToCheck[j].test(elements[i].className);
-                            if (!match) {
-                                break;
-                            }
-                        }
-                        if (match) {
-                            returnElements.push(elements[i]);
-                        }
-                    }
-                    
-                    return lib.dom.NodeList(returnElements);
+                for (i = 0; i < classes.length; i++) {
+                    classesToCheck.push(new RegExp("(^|\\s)" + classes[i] + "(\\s|$)"));
                 }
+                
+                for (i = 0; i < elements.length; i++) {
+                    match = false;
+                    for (var j = 0; j < classesToCheck.length; j++){
+                        match = classesToCheck[j].test(elements[i].className);
+                        if (!match) {
+                            break;
+                        }
+                    }
+                    if (match) {
+                        returnElements.push(elements[i]);
+                    }
+                }
+                
+                return lib.dom.NodeList(returnElements);
             }
         },
         
