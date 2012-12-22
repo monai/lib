@@ -4,23 +4,19 @@
     var lib, readyQueue;
     
     function log() {
-        if (window.console && window.console.log && window.console.log.apply) {
-            window.console.log.apply(window.console, arguments);
-        } else {
-            var args, l;
+        try {
+            window.console.log.apply(window.console, arguments)
+        } catch (ex) {
+            var args;
             
             if (!log.output) {
                 log.output = [];
             }
             
-            l = arguments.length;
-            args = new Array(l);
-            while (l--) {
-                args[l] = arguments[l];
-            }
+            args = Array.prototype.slice.call(arguments, 0);
             args = args.join(", ");
-
             log.output.push(args);
+            
             window.clearTimeout(log.timer);
             log.timer = window.setTimeout(function () {
                 var t = log.output.join("\r\n");
@@ -28,14 +24,13 @@
                 alert(t);
             }, 1000);
         }
-        return arguments[0];
     }
     
     function inspect(object) {
         var o = [];
         for (var i in object) {
             if (Object.prototype.hasOwnProperty.call(object, i)) {
-                o.push(i + ": " + object[i]);
+                o.push([i, ": ", object[i]].join(""));
             }
         }
         return o.join("\r\n");
@@ -60,7 +55,7 @@
                 for (var i = 0, l = readyQueue.length; i < l; i++) {
                     readyQueue[i].call(this.window);
                 }
-                readyQueue = [];
+                readyQueue.length = 0;
             } else if (typeof callback === "function") {
                 if (!this.isReady) {
                     readyQueue.push(callback);
